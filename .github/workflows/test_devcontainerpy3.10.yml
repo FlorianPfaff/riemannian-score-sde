@@ -27,6 +27,9 @@ jobs:
         # Copy the repository code into the container
         docker cp . $container_id:/workspace
 
+        # Reduce the number of steps to 1500 for better speed
+        docker exec $container_id bash -c "cd /workspace && sed -i 's/steps: 5000/steps: 1500/' /workspace/config/experiment/s2_toy.yaml"
+
         # Run the postCreateCommand specified in devcontainer.json
         # to emulate the behavior of the devcontainer postCreateCommand section.
         docker exec $container_id bash -c "cd /workspace && git clone https://github.com/oxcsml/geomstats.git && pip install -r requirements.txt && pip install -r requirements_exps.txt && GEOMSTATS_BACKEND=jax pip install -e geomstats && pip install -e ."
