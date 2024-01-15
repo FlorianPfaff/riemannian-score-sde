@@ -1,6 +1,7 @@
 {
     "version": "0.2.0",
     "configurations": [
+
         {
             "name": "s2_toy",
             "type": "python",
@@ -13,6 +14,17 @@
             ]
         },
         {
+            "name": "s2_symm",
+            "type": "python",
+            "request": "launch",
+            "program": "main.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "args": [
+                "experiment=s2_symm"
+            ]
+        },
+        {
             "name": "s2_toy numpy",
             "type": "python",
             "request": "launch",
@@ -21,6 +33,21 @@
             "justMyCode": true,
             "args": [
                 "experiment=s2_toy"
+            ],
+            "env": {
+                "GEOMSTATS_BACKEND": "numpy",
+                "PYRECEST_BACKEND": "numpy"
+            }
+        },
+        {
+            "name": "s2_symm numpy",
+            "type": "python",
+            "request": "launch",
+            "program": "main.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "args": [
+                "experiment=s2_symm"
             ],
             "env": {
                 "GEOMSTATS_BACKEND": "numpy",
