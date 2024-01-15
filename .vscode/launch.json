@@ -1,0 +1,31 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "s2_toy",
+            "type": "python",
+            "request": "launch",
+            "program": "main.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "args": [
+                "experiment=s2_toy"
+            ]
+        },
+        {
+            "name": "s2_toy numpy",
+            "type": "python",
+            "request": "launch",
+            "program": "main.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "args": [
+                "experiment=s2_toy"
+            ],
+            "env": {
+                "GEOMSTATS_BACKEND": "numpy",
+                "PYRECEST_BACKEND": "numpy"
+            }
+        }
+    ]
+}
