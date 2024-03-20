@@ -1,7 +1,7 @@
 jax==0.4.23  # Fix versions to ensure it works
 jaxlib==0.4.23  # Fix versions to ensure it works
 dm-haiku
-optax==0.1.7
+optax==0.2.1
 distrax
 diffrax
 fsspec[http]>=2021.05.0, !=2021.06.0
