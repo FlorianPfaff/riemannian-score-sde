@@ -45,7 +45,7 @@ class Predictor(abc.ABC):
 
     @abc.abstractmethod
     def update_fn(
-        self, rng: jax.random.KeyArray, x: jnp.ndarray, t: float, dt: float
+        self, rng, x: jnp.ndarray, t: float, dt: float
     ) -> Tuple[jnp.ndarray, jnp.ndarray]:
         """One update of the predictor.
 
@@ -77,7 +77,7 @@ class Corrector(abc.ABC):
 
     @abc.abstractmethod
     def update_fn(
-        self, rng: jax.random.KeyArray, x: jnp.ndarray, t: float, dt: float
+        self, rng, x: jnp.ndarray, t: float, dt: float
     ) -> Tuple[jnp.ndarray, jnp.ndarray]:
         """One update of the corrector.
 
@@ -99,7 +99,7 @@ class EulerMaruyamaPredictor(Predictor):
         super().__init__(sde)
 
     def update_fn(
-        self, rng: jax.random.KeyArray, x: jnp.ndarray, t: float, dt: float
+        self, rng, x: jnp.ndarray, t: float, dt: float
     ) -> Tuple[jnp.ndarray, jnp.ndarray]:
         z = jax.random.normal(rng, x.shape)
         drift, diffusion = self.sde.coefficients(x, t)
@@ -128,7 +128,7 @@ class NonePredictor(Predictor):
         pass
 
     def update_fn(
-        self, rng: jax.random.KeyArray, x: jnp.ndarray, t: float, dt: float
+        self, rng, x: jnp.ndarray, t: float, dt: float
     ) -> Tuple[jnp.ndarray, jnp.ndarray]:
         return x, x
 
@@ -146,7 +146,7 @@ class NoneCorrector(Corrector):
         pass
 
     def update_fn(
-        self, rng: jax.random.KeyArray, x: jnp.ndarray, t: float, dt: float
+        self, rng, x: jnp.ndarray, t: float, dt: float
     ) -> Tuple[jnp.ndarray, jnp.ndarray]:
         return x, x
 
