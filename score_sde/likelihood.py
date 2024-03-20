@@ -37,7 +37,7 @@ def get_likelihood_fn(
     eps: str = 1e-5,
     bits_per_dimension=True,
 ):
-    def likelihood_fn(rng: jax.random.KeyArray, data: jnp.ndarray, tf : float = None):
+    def likelihood_fn(rng, data: jnp.ndarray, tf : float = None):
         """Compute an unbiased estimate to the log-likelihood in bits/dim.
 
         Args:

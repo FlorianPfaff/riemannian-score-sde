@@ -42,7 +42,7 @@ def get_riemannian_div_fn(func, hutchinson_type: str = "None", manifold=None):
 
 
 def div_noise(
-    rng: jax.random.KeyArray, shape: Sequence[int], hutchinson_type: str
+    rng, shape: Sequence[int], hutchinson_type: str
 ) -> jnp.ndarray:
     """Sample noise for the hutchinson estimator."""
     if hutchinson_type == "Gaussian":

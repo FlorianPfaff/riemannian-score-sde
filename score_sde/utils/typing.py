@@ -1,4 +1,4 @@
-from typing import Callable, Tuple
+from typing import Callable, Tuple, Any
 
 import jax
 import jax.numpy as jnp
@@ -7,7 +7,7 @@ ParametrisedScoreFunction = Callable[[dict, dict, jnp.ndarray, float], jnp.ndarr
 ScoreFunction = Callable[[jnp.ndarray, float], jnp.ndarray]
 
 SDEUpdateFunction = Callable[
-    [jax.random.KeyArray, jnp.ndarray, float],
+    [Any, jnp.ndarray, float],
     Tuple[
         jnp.ndarray,
         jnp.ndarray,

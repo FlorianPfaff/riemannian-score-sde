@@ -20,7 +20,7 @@ class EulerMaruyamaManifoldPredictor(Predictor):
         super().__init__(sde)
 
     def update_fn(
-        self, rng: jax.random.KeyArray, x: jnp.ndarray, t: float, dt: float
+        self, rng, x: jnp.ndarray, t: float, dt: float
     ) -> Tuple[jnp.ndarray, jnp.ndarray]:
         shape = x.shape
         z = self.sde.manifold.random_normal_tangent(
@@ -56,7 +56,7 @@ class LangevinCorrector(Corrector):
         super().__init__(sde, snr, n_steps)
 
     def update_fn(
-        self, rng: jax.random.KeyArray, x: jnp.ndarray, t: float, dt: float
+        self, rng, x: jnp.ndarray, t: float, dt: float
     ) -> Tuple[jnp.ndarray, jnp.ndarray]:
         shape = x.shape
         sde = self.sde

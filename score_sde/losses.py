@@ -17,7 +17,7 @@
 """All functions related to loss computation and optimization.
 """
 
-from typing import Callable, Tuple
+from typing import Callable, Tuple, Any
 
 import jax
 import optax
@@ -47,7 +47,7 @@ def get_dsm_loss_fn(
     )
 
     def loss_fn(
-        rng: jax.random.KeyArray, params: dict, states: dict, batch: dict
+        rng, params: dict, states: dict, batch: dict
     ) -> Tuple[float, dict]:
         score_fn = sde.reparametrise_score_fn(model, params, states, train, True)
         x_0 = batch["data"]
@@ -90,7 +90,7 @@ def get_ism_loss_fn(
     sde = pushforward.sde
 
     def loss_fn(
-        rng: jax.random.KeyArray, params: dict, states: dict, batch: dict
+        rng, params: dict, states: dict, batch: dict
     ) -> Tuple[float, dict]:
         score_fn = sde.reparametrise_score_fn(model, params, states, train, True)
         x_0 = batch["data"]
@@ -128,7 +128,7 @@ def get_logp_loss_fn(
     **kwargs
 ):
     def loss_fn(
-        rng: jax.random.KeyArray, params: dict, states: dict, batch: dict
+        rng, params: dict, states: dict, batch: dict
     ) -> Tuple[float, dict]:
         x_0 = batch["data"]
         context = batch["context"]
@@ -163,7 +163,7 @@ def get_ema_loss_step_fn(
       A one-step function for training or evaluation.
     """
 
-    def step_fn(carry_state: Tuple[jax.random.KeyArray, TrainState], batch: dict):
+    def step_fn(carry_state: Tuple[Any, TrainState], batch: dict):
         """Running one step of training or evaluation.
 
         This function will undergo `jax.lax.scan` so that multiple steps can be pmapped and jit-compiled together
