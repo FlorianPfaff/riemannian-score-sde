@@ -24,17 +24,17 @@ jobs:
         run: |
           # Pull the specified image
           docker pull mcr.microsoft.com/devcontainers/python:0-3.10
-          
+
           # Create and start a container from the image, overriding the default command to keep it running
           container_id=$(docker run -d mcr.microsoft.com/devcontainers/python:0-3.10 tail -f /dev/null)
-          
+
           # Copy the repository code into the container
           docker cp . $container_id:/workspace
-          
+
           # Run the postCreateCommand specified in devcontainer.json
           # to emulate the behavior of the devcontainer postCreateCommand section.
-          docker exec -e PYRECEST_BACKEND=numpy -e GEOMSTATS_BACKEND=jax $container_id bash -c "cd /workspace && git clone https://github.com/oxcsml/geomstats.git && pip install -r requirements.txt && pip install -r requirements_exps.txt && pip install -e geomstats && pip install https://github.com/FlorianPfaff/pyRecEst/releases/download/0.7.1/pyrecest-0.7.1-py3-none-any.whl && pip install -e ."
-          
-          # Run the experiment based on matrix variable
-          docker exec -e PYRECEST_BACKEND=numpy -e GEOMSTATS_BACKEND=jax $container_id python /workspace/main.py experiment=${{ matrix.experiment }} steps=1000
+
+docker exec -e PYRECEST_BACKEND=numpy -e GEOMSTATS_BACKEND=jax $container_id bash -c "cd /workspace && git clone https://github.com/oxcsml/geomstats.git && pip install -r requirements.txt && pip install -r requirements_exps.txt && pip install -e geomstats && pip install https://github.com/FlorianPfaff/pyRecEst/releases/download/0.7.1/pyrecest-0.7.1-py3-none-any.whl && python -m pip install poetry && poetry config virtualenvs.create false && poetry install"
+
+docker exec -e PYRECEST_BACKEND=numpy -e GEOMSTATS_BACKEND=jax $container_id python /workspace/main.py experiment=${{ matrix.experiment }} steps=1000
 
