@@ -7,7 +7,7 @@ from tqdm import tqdm
 import jax
 from jax import numpy as jnp
 import optax
-import haiku as hk
+# import haiku as hk
 
 from omegaconf import OmegaConf
 from hydra.utils import instantiate, get_class, call
@@ -201,32 +201,14 @@ def run(cfg):
 
     log.info("Stage : Instantiate vector field model")
 
-    def model(y, t, context=None):
-        """Vector field s_\theta: y, t, context -> T_y M"""
-        output_shape = get_class(cfg.generator._target_).output_shape(model_manifold)
-        score = instantiate(
-            cfg.generator,
-            cfg.architecture,
-            cfg.embedding,
-            output_shape,
-            manifold=model_manifold,
-        )
-        # TODO: parse context into embedding map
-        if context is not None:
-            t_expanded = jnp.expand_dims(t.reshape(-1), -1)
-            if context.shape[0] != y.shape[0]:
-                context = jnp.repeat(jnp.expand_dims(context, 0), y.shape[0], 0)
-            context = jnp.concatenate([t_expanded, context], axis=-1)
-        else:
-            context = t
-        return score(y, context)
-
-    model = hk.transform_with_state(model)
-
     rng, next_rng = jax.random.split(rng)
-    t = jnp.zeros((cfg.batch_size, 1))
-    data, context = next(train_ds)
-    params, state = model.init(rng=next_rng, y=transform.inv(data), t=t, context=context)
+    dummy_t = jnp.zeros((cfg.batch_size, 1))
+    dummy_data, dummy_context = next(train_ds)
+    #params, state = model.init(rng=next_rng, y=transform.inv(data), t=t, context=context)
+    model = ScoreModel(cfg=cfg, model_manifold=model_manifold)
+    variables = model.init(jax.random.PRNGKey(0), y=dummy_data, t=dummy_t, context=dummy_context)
+    params = variables['params']
+
 
     log.info("Stage : Instantiate optimiser")
     schedule_fn = instantiate(cfg.scheduler)
@@ -266,3 +248,35 @@ def run(cfg):
         success = True
     logger.save()
     logger.finalize("success" if success else "failure")
+
+
+from flax import linen as nn
+from typing import Any
+class ScoreModel(nn.Module):
+    cfg: Any  # Assuming cfg doesn't have a static type, use appropriate type hints
+    model_manifold: Any  # Use the appropriate type here
+    
+    def setup(self, cfg, model_manifold):
+        super().__init__()
+        self.cfg = cfg
+        self.model_manifold = model_manifold
+
+    def __call__(self, y, t, context=None):
+        """Vector field s_\theta: y, t, context -> T_y M"""
+        output_shape = get_class(self.cfg.generator._target_).output_shape(self.model_manifold)
+        score = instantiate(
+            self.cfg.generator,
+            self.cfg.architecture,
+            self.cfg.embedding, 
+            output_shape,
+            manifold=self.model_manifold,
+        )
+        # TODO: parse context into embedding map
+        if context is not None:
+            t_expanded = jnp.expand_dims(t.reshape(-1), -1)
+            if context.shape[0] != y.shape[0]:
+                context = jnp.repeat(jnp.expand_dims(context, 0), y.shape[0], 0)
+            context = jnp.concatenate([t_expanded, context], axis=-1)
+        else:
+            context = t
+        return score(y, context)
