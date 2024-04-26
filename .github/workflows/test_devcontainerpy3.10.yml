@@ -36,5 +36,5 @@ jobs:
           docker exec -e PYRECEST_BACKEND=numpy -e GEOMSTATS_BACKEND=jax $container_id bash -c "cd /workspace && git clone -b jax_backend https://github.com/FlorianPfaff/geomstats_geomstats.git && pip install -r requirements.txt && pip install -r requirements_exps.txt && pip install -e geomstats_geomstats && pip install https://github.com/FlorianPfaff/pyRecEst/releases/download/0.7.1/pyrecest-0.7.1-py3-none-any.whl && pip install -e ."
           
           # Run the experiment based on matrix variable
-          docker exec -e PYRECEST_BACKEND=numpy -e GEOMSTATS_BACKEND=jax $container_id python /workspace/main.py experiment=${{ matrix.experiment }} steps=1000
+          docker exec -e HYDRA_FULL_ERROR=1 -e PYRECEST_BACKEND=numpy -e GEOMSTATS_BACKEND=jax $container_id python /workspace/main.py experiment=${{ matrix.experiment }} steps=1000
 
