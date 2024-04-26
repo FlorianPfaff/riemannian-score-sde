@@ -23,10 +23,10 @@ jobs:
       - name: Build and run devcontainer
         run: |
           # Pull the specified image
-          docker pull mcr.microsoft.com/devcontainers/python:0-3.10
+          docker pull mcr.microsoft.com/devcontainers/python:0-3.11
           
           # Create and start a container from the image, overriding the default command to keep it running
-          container_id=$(docker run -d mcr.microsoft.com/devcontainers/python:0-3.10 tail -f /dev/null)
+          container_id=$(docker run -d mcr.microsoft.com/devcontainers/python:0-3.11 tail -f /dev/null)
           
           # Copy the repository code into the container
           docker cp . $container_id:/workspace
