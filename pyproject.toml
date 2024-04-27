@@ -1,0 +1,44 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "score-sde"
+version = "1.0.1a"  # Modify as per your VERSION file or another source
+description = ""
+readme = "README.md"
+authors = [{name = "Michael Hutchinson, Emile Mathieu", email = "michael.hutchinson@stats.ox.ac.uk"}]
+classifiers = [
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3.10",
+    "Operating System :: OS Independent",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence"
+]
+dependencies = [
+    "jax==0.4.26",
+    "jaxlib==0.4.26",
+    "dm-haiku",
+    "optax==0.2.2",
+    "distrax",
+    "diffrax",
+    "fsspec[http]>=2021.05.0, !=2021.06.0",
+    "joblib",
+    "autograd",
+    "tqdm",
+    "seaborn",
+    "wandb",
+    "hydra_core==1.3.2",
+    "hydra_colorlog==1.2.0",
+    "submitit==1.5.1",
+    "hydra-submitit-launcher==1.2.0",
+    "hydra-joblib-launcher==1.2.0"
+]
+
+[tool.setuptools]
+packages = ["riemannian_score_sde"]
+
+[project.optional-dependencies]
+test = [
+    "pytest",
+    "pytest-cov"
+]
