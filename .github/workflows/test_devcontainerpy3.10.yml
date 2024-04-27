@@ -34,7 +34,5 @@ jobs:
           # Run the postCreateCommand specified in devcontainer.json
           # to emulate the behavior of the devcontainer postCreateCommand section.
 
-          docker exec -e PYRECEST_BACKEND=numpy -e GEOMSTATS_BACKEND=jax $container_id bash -c "cd /workspace && python -m pip install poetry && python -m poetry config virtualenvs.create false && python -m poetry install"
-
-          docker exec -e PYRECEST_BACKEND=numpy -e GEOMSTATS_BACKEND=jax $container_id python /workspace/main.py experiment=${{ matrix.experiment }} steps=1000
+          docker exec -e PYRECEST_BACKEND=numpy -e GEOMSTATS_BACKEND=jax $container_id bash -c "cd /workspace && python -m pip install poetry && python -m poetry config virtualenvs.create false && python -m poetry install && python /workspace/main.py experiment=${{ matrix.experiment }} steps=1000"
 
