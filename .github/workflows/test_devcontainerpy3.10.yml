@@ -33,7 +33,7 @@ jobs:
           
           # Run the postCreateCommand specified in devcontainer.json
           # to emulate the behavior of the devcontainer postCreateCommand section.
-          docker exec -e PYRECEST_BACKEND=numpy -e GEOMSTATS_BACKEND=jax $container_id bash -c "cd /workspace && git clone https://github.com/oxcsml/geomstats.git && pip install -r geomstats/requirements.txt && pip install jax jaxlib autograd && pip install -e geomstats && pip install https://github.com/FlorianPfaff/pyRecEst/releases/download/0.7.1/pyrecest-0.7.1-py3-none-any.whl && pip install -e ."
+          docker exec -e PYRECEST_BACKEND=numpy -e GEOMSTATS_BACKEND=jax $container_id bash -c "cd /workspace && git clone -b score-based-sde https://github.com/FlorianPfaff/geomstats_geomstats.git geomstats && pip install jax jaxlib autograd && pip install -e geomstats && pip install https://github.com/FlorianPfaff/pyRecEst/releases/download/0.7.1/pyrecest-0.7.1-py3-none-any.whl && pip install -e ."
           
           # Run the experiment based on matrix variable
           docker exec -e PYRECEST_BACKEND=numpy -e GEOMSTATS_BACKEND=jax $container_id python /workspace/main.py experiment=${{ matrix.experiment }} steps=1000 hydra.job.chdir=true
