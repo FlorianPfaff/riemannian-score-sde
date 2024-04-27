@@ -31,8 +31,8 @@ jobs:
           # Copy the repository code into the container
           docker cp . $container_id:/workspace
 
-          # Run the postCreateCommand specified in devcontainer.json
-          # to emulate the behavior of the devcontainer postCreateCommand section.
+          # Install Poetry and dependencies, letting Poetry create a virtual environment
+          docker exec -e PYRECEST_BACKEND=numpy -e GEOMSTATS_BACKEND=jax $container_id bash -c "cd /workspace && python -m pip install poetry && python -m poetry install"
 
-          docker exec -e PYRECEST_BACKEND=numpy -e GEOMSTATS_BACKEND=jax $container_id bash -c "cd /workspace && python -m pip install poetry && python -m poetry config virtualenvs.create false && python -m poetry install && python /workspace/main.py experiment=${{ matrix.experiment }} steps=1000"
-
+          # Activate the Poetry virtual environment and run the script
+          docker exec -e PYRECEST_BACKEND=numpy -e GEOMSTATS_BACKEND=jax $container_id bash -c "cd /workspace && . \$(python -m poetry env info --path)/bin/activate && python main.py experiment=${{ matrix.experiment }} steps=1000"
