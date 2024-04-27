@@ -20,7 +20,6 @@ hydra-colorlog = "1.2.0"
 hydra-joblib-launcher = "1.2.0"
 submitit = { git = "https://github.com/emilemathieu/submitit.git" }
 geomstats = { git = "https://github.com/oxcsml/geomstats.git" }
-pyrecest = { git = "https://github.com/FlorianPfaff/pyRecEst.git"}
 hydra-submitit-launcher = { git = "https://github.com/emilemathieu/hydra.git", subdirectory = "plugins/hydra_submitit_launcher" }
 jax = "0.4.26"
 jaxlib = "0.4.26"
