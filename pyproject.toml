@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "score-sde"
 version = "1.0.1a1"
-description = "" # Add your description here
+description = ""
 authors = ["Michael Hutchinson <michael.hutchinson@stats.ox.ac.uk>", "Emile Mathieu <>"]
 readme = "README.md"
 
@@ -20,6 +20,7 @@ hydra-colorlog = "1.2.0"
 hydra-joblib-launcher = "1.2.0"
 submitit = { git = "https://github.com/emilemathieu/submitit.git" }
 geomstats = { git = "https://github.com/oxcsml/geomstats.git" }
+pyrecest = { git = "https://github.com/FlorianPfaff/pyRecEst.git"}
 hydra-submitit-launcher = { git = "https://github.com/emilemathieu/hydra.git", subdirectory = "plugins/hydra_submitit_launcher" }
 jax = "0.4.26"
 jaxlib = "0.4.26"
