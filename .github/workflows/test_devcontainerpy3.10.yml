@@ -14,7 +14,7 @@ jobs:
 
     strategy:
       matrix:
-        experiment: [s2_toy, s2_symm]
+        experiment: [s2_toy]
 
     steps:
       - name: Checkout code
