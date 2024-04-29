@@ -20,5 +20,5 @@
 	},
 
 	// Use 'postCreateCommand' to run commands after the container is created.
-	"postCreateCommand": "git clone https://github.com/oxcsml/geomstats.git || true; pip install -r requirements.txt -r requirements_dev.txt -r requirements_exps.txt; export GEOMSTATS_BACKEND=jax; pip install -e geomstats; pip install -e ."
+	"postCreateCommand": "pip install jax jaxlib autograd && curl -sL https://raw.githubusercontent.com/oxcsml/geomstats/master/requirements.txt | pip install -r /dev/stdin && GEOMSTATS_BACKEND=jax pip install https://github.com/FlorianPfaff/pyRecEst/releases/download/0.7.1/pyrecest-0.7.1-py3-none-any.whl git+https://github.com/oxcsml/geomstats.git -e ."
 }
