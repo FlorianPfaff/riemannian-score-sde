@@ -4,55 +4,27 @@
 
         {
             "name": "s2_toy",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "program": "main.py",
             "console": "integratedTerminal",
             "justMyCode": true,
             "args": [
-                "experiment=s2_toy"
+                "experiment=s2_toy",
+                "hydra.job.chdir=False"
             ]
         },
         {
             "name": "s2_symm",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "program": "main.py",
             "console": "integratedTerminal",
             "justMyCode": true,
             "args": [
-                "experiment=s2_symm"
+                "experiment=s2_symm",
+                "hydra.job.chdir=False"
             ]
-        },
-        {
-            "name": "s2_toy numpy",
-            "type": "python",
-            "request": "launch",
-            "program": "main.py",
-            "console": "integratedTerminal",
-            "justMyCode": true,
-            "args": [
-                "experiment=s2_toy"
-            ],
-            "env": {
-                "GEOMSTATS_BACKEND": "numpy",
-                "PYRECEST_BACKEND": "numpy"
-            }
-        },
-        {
-            "name": "s2_symm numpy",
-            "type": "python",
-            "request": "launch",
-            "program": "main.py",
-            "console": "integratedTerminal",
-            "justMyCode": true,
-            "args": [
-                "experiment=s2_symm"
-            ],
-            "env": {
-                "GEOMSTATS_BACKEND": "numpy",
-                "PYRECEST_BACKEND": "numpy"
-            }
         }
     ]
 }
