@@ -36,5 +36,5 @@ jobs:
           docker exec -e PYRECEST_BACKEND=numpy -e GEOMSTATS_BACKEND=jax $container_id bash -c "cd /workspace && pip install jax jaxlib autograd && curl -sL https://raw.githubusercontent.com/oxcsml/geomstats/master/requirements.txt | pip install -r /dev/stdin && pip install https://github.com/FlorianPfaff/pyRecEst/releases/download/0.7.1/pyrecest-0.7.1-py3-none-any.whl git+https://github.com/oxcsml/geomstats.git -e ."
           
           # Run the experiment based on matrix variable
-          docker exec -e PYRECEST_BACKEND=numpy -e GEOMSTATS_BACKEND=jax $container_id python /workspace/main.py experiment=${{ matrix.experiment }} steps=1000 hydra.job.chdir=true
+          docker exec -e PYRECEST_BACKEND=numpy -e GEOMSTATS_BACKEND=jax $container_id python /workspace/main.py experiment=${{ matrix.experiment }} steps=1000 hydra.job.chdir=False
 
