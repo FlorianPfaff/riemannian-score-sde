@@ -31,7 +31,9 @@ dependencies = [
     "hydra_colorlog==1.2.0",
     "submitit==1.5.1",
     "hydra-submitit-launcher==1.2.0",
-    "hydra-joblib-launcher==1.2.0"
+    "hydra-joblib-launcher==1.2.0",
+    "pyrecest @ https://github.com/FlorianPfaff/pyRecEst/releases/download/0.7.1/pyrecest-0.7.1-py3-none-any.whl",
+    "geomstats @ git+https://github.com/FlorianPfaff/geomstats_for_score_sde.git@score-based-sde"
 ]
 
 [tool.setuptools]
