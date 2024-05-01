@@ -3,7 +3,7 @@
 {
 	"name": "Python 3.10 with installation",
 	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
-	"image": "mcr.microsoft.com/devcontainers/python:0-3.10",
+	"image": "mcr.microsoft.com/devcontainers/python:0-3.11",
 
 	// Features to add to the dev container. More info: https://containers.dev/features.
 	// "features": {},
@@ -20,5 +20,5 @@
 	},
 
 	// Use 'postCreateCommand' to run commands after the container is created.
-	"postCreateCommand": "pip install jax jaxlib autograd && curl -sL https://raw.githubusercontent.com/oxcsml/geomstats/master/requirements.txt | pip install -r /dev/stdin && GEOMSTATS_BACKEND=jax pip install https://github.com/FlorianPfaff/pyRecEst/releases/download/0.7.1/pyrecest-0.7.1-py3-none-any.whl git+https://github.com/oxcsml/geomstats.git -e ."
+	"postCreateCommand": "pip install jax jaxlib autograd && curl -sL https://raw.githubusercontent.com/oxcsml/geomstats/master/requirements.txt | pip install -r /dev/stdin && GEOMSTATS_BACKEND=jax pip install https://github.com/FlorianPfaff/pyRecEst/releases/download/0.7.1/pyrecest-0.7.1-py3-none-any.whl git+https://github.com/FlorianPfaff/geomstats_geomstats.git@score-based-sde -e ."
 }

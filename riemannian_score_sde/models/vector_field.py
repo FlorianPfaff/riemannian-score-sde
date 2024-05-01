@@ -7,7 +7,8 @@ import jax.numpy as jnp
 
 from hydra.utils import instantiate
 from geomstats.geometry.hypersphere import Hypersphere
-from geomstats.geometry.base import VectorSpace, EmbeddedManifold
+from geomstats.geometry.base import VectorSpace
+from geomstats.geometry.base import LevelSet as EmbeddedManifold
 
 
 # def get_exact_div_fn(fi_fn, Xi=None):
