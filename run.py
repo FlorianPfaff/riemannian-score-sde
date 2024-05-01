@@ -4,10 +4,11 @@ import logging
 from timeit import default_timer as timer
 from tqdm import tqdm
 
+import flax.linen as nn
+from typing import Any
 import jax
 from jax import numpy as jnp
 import optax
-import haiku as hk
 
 from omegaconf import OmegaConf
 from hydra.utils import instantiate, get_class, call
@@ -201,38 +202,41 @@ def run(cfg):
 
     log.info("Stage : Instantiate vector field model")
 
-    def model(y, t, context=None):
-        """Vector field s_\theta: y, t, context -> T_y M"""
-        output_shape = get_class(cfg.generator._target_).output_shape(model_manifold)
-        score = instantiate(
-            cfg.generator,
-            cfg.architecture,
-            cfg.embedding,
-            output_shape,
-            manifold=model_manifold,
-        )
-        # TODO: parse context into embedding map
-        if context is not None:
-            t_expanded = jnp.expand_dims(t.reshape(-1), -1)
-            if context.shape[0] != y.shape[0]:
-                context = jnp.repeat(jnp.expand_dims(context, 0), y.shape[0], 0)
-            context = jnp.concatenate([t_expanded, context], axis=-1)
-        else:
-            context = t
-        return score(y, context)
+    class MyModel(nn.Module):
+        generator: Any  # adjust the type accordingly
+        architecture: Any
+        embedding: Any
+        output_shape: Any
+        manifold: Any
 
-    model = hk.transform_with_state(model)
+        def __call__(self, y, t, context=None):
+            score = self.generator(self.architecture, self.embedding, self.output_shape, self.manifold)
+            if context is not None:
+                t_expanded = jnp.expand_dims(t.reshape(-1), -1)
+                if context.shape[0] != y.shape[0]:
+                    context = jnp.repeat(jnp.expand_dims(context, 0), y.shape[0], 0)
+                context = jnp.concatenate([t_expanded, context], axis=-1)
+            else:
+                context = t
+            return score(y, context)
+
+
+    output_shape = get_class(cfg.generator._target_).output_shape(model_manifold)
+    model = MyModel(generator=cfg.generator, architecture=cfg.architecture, embedding=cfg.embedding, output_shape=output_shape, manifold=model_manifold)
+    
+
 
     rng, next_rng = jax.random.split(rng)
     t = jnp.zeros((cfg.batch_size, 1))
     data, context = next(train_ds)
-    params, state = model.init(rng=next_rng, y=transform.inv(data), t=t, context=context)
+    params = model.init(next_rng, y=transform.inv(data), t=t, context=context)
 
     log.info("Stage : Instantiate optimiser")
     schedule_fn = instantiate(cfg.scheduler)
     optimiser = optax.chain(instantiate(cfg.optim), optax.scale_by_schedule(schedule_fn))
     opt_state = optimiser.init(params)
 
+    """
     if cfg.resume or cfg.mode == "test":  # if resume or evaluate
         train_state = restore(ckpt_path)
     else:
@@ -247,6 +251,7 @@ def run(cfg):
             rng=next_rng,  # TODO: we should actually use this for reproducibility
         )
         save(ckpt_path, train_state)
+    """
 
     if cfg.mode == "train" or cfg.mode == "all":
         # if train_state.step == 0 and cfg.test_test:
