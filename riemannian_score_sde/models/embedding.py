@@ -1,7 +1,6 @@
 import abc
 from dataclasses import dataclass
 
-import jax
 import haiku as hk
 import jax.numpy as jnp
 

@@ -1,13 +1,10 @@
 import abc
 
-import numpy as np
-import jax
 import haiku as hk
 import jax.numpy as jnp
 
 from hydra.utils import instantiate
 from geomstats.geometry.hypersphere import Hypersphere
-from geomstats.geometry.base import VectorSpace
 from geomstats.geometry.base import LevelSet as EmbeddedManifold
 
 

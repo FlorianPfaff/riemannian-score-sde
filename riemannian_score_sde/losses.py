@@ -1,15 +1,14 @@
 """All functions related to loss computation and optimization.
 """
 
-from typing import Callable, Tuple
+from typing import Tuple
 
-import jax
 import jax.numpy as jnp
 import jax.random as random
 
 from score_sde.utils import batch_mul
 from score_sde.models import SDEPushForward, MoserFlow
-from score_sde.utils import ParametrisedScoreFunction, TrainState
+from score_sde.utils import ParametrisedScoreFunction
 from score_sde.models import div_noise, get_riemannian_div_fn
 
 
