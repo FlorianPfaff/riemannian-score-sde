@@ -1,10 +1,12 @@
 # [Riemannian Score-Based Generative Modelling](https://arxiv.org/abs/2202.02763)
 
-This repo requires a modified version of [geomstats](https://github.com/geomstats/geomstats) that adds jax functionality, and a number of other modifications. This can be found [here](https://github.com/oxcsml/geomstats.git).
-
-This repository contains the code for the paper `Riemannian Score-Based Generative Modelling`. This paper theoretically and practically extends score-based generative modelling (SGM) from Euclidean space to any connected and complete Riemannian manifold.
-
 SGMs are a powerful class of generative models that exhibit remarkable empirical performance. Score-based generative modelling consists of a “noising” stage, whereby a diffusion is used to gradually add Gaussian noise to data, and a generative model, which entails a “denoising” process defined by approximating the time-reversal of the diffusion. 
+
+This repository hosts a derived version of the official implementation of the paper `Riemannian Score-Based Generative Modelling`. It adapts the code to later versions of dependencies, comes with a more modern build system, and includes one more example that illustrates how densities of [pyRecEst](https://github.com/FlorianPfaff/pyRecEst) can be used.
+
+The codebase utilizes a specially modified version of [geomstats](https://github.com/geomstats/geomstats). Initially, the required JAX functionality was integrated by Emile Mathieu and Michael Hutchinson in a version hosted at [this repository](https://github.com/oxcsml/geomstats.git). However, updates to various packages and have since been made that are incompatible with that implementation.
+
+An updated version of `geomstats`, maintained by Florian Pfaff, includes these enhancements and is compatible with newer package versions. This modified version can now be found at [FlorianPfaff/geomstats_for_score_sde](https://github.com/FlorianPfaff/geomstats_for_score_sde).
 
 ## Install
 

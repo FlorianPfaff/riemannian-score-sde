@@ -4,10 +4,14 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "score-sde"
-version = "1.0.1a"  # Modify as per your VERSION file or another source
+version = "1.0.1a"
 description = ""
 readme = "README.md"
-authors = [{name = "Michael Hutchinson, Emile Mathieu", email = "michael.hutchinson@stats.ox.ac.uk"}]
+authors = [
+    { name = "Emile Mathieu", email = "ebm32@cam.ac.uk" },
+    { name = "Michael Hutchinson", email = "michael.hutchinson@stats.ox.ac.uk" },
+    { name = "Florian Pfaff", email = "pfaff@ias.uni-stuttgart.de" }
+]
 classifiers = [
     "License :: OSI Approved :: Apache Software License",
     "Programming Language :: Python :: 3.10",
