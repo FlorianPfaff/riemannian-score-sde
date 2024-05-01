@@ -11,8 +11,12 @@
             "justMyCode": true,
             "args": [
                 "experiment=s2_toy",
-                "hydra.job.chdir=False"
-            ]
+                "hydra.job.chdir=False",
+                "steps=1000"
+            ],
+            "env": {
+                "HYDRA_FULL_ERROR": "1"
+            }
         },
         {
             "name": "s2_symm",
@@ -23,8 +27,12 @@
             "justMyCode": true,
             "args": [
                 "experiment=s2_symm",
-                "hydra.job.chdir=False"
-            ]
+                "hydra.job.chdir=False",
+                "steps=1000"
+            ],
+            "env": {
+                "HYDRA_FULL_ERROR": "1"
+            }
         }
     ]
 }
