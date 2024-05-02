@@ -1,5 +1,3 @@
-import jax
-import optax
 import jax.numpy as jnp
 from jax.tree_util import tree_map, tree_leaves
 
