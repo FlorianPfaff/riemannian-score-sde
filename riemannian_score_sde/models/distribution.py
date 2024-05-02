@@ -15,8 +15,8 @@ class UniformDistribution:
         if isinstance(manifold, Hypersphere):
             self.dist = HypersphericalUniformDistribution(manifold.dim)
 
-    def sample(self, rng, shape):
-        return self.manifold.random_uniform(state=rng, n_samples=shape[0])
+    def sample(self, _, shape):
+        return self.dist.sample(shape[0])
 
     def log_prob(self, z):
         return self.dist.ln_pdf(z)
