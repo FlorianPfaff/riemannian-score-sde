@@ -4,19 +4,22 @@ import jax.numpy as jnp
 from geomstats.geometry.euclidean import Euclidean
 from score_sde.sde import SDE
 from distrax import MultivariateNormalDiag
-
+from geomstats.geometry.hypersphere import Hypersphere
+from pyrecest.distributions import HypersphericalUniformDistribution
 
 class UniformDistribution:
     """Uniform density on compact manifold"""
 
     def __init__(self, manifold, **kwargs):
         self.manifold = manifold
+        if isinstance(manifold, Hypersphere):
+            self.dist = HypersphericalUniformDistribution(manifold.dim)
 
     def sample(self, rng, shape):
         return self.manifold.random_uniform(state=rng, n_samples=shape[0])
 
     def log_prob(self, z):
-        return -jnp.ones([z.shape[0]]) * self.manifold.log_volume
+        return self.dist.ln_pdf(z)
 
     def grad_U(self, x):
         return jnp.zeros_like(x)
@@ -57,9 +60,7 @@ class DefaultDistribution:
 class WrapNormDistribution:
     def __init__(self, manifold, scale=1.0, mean=None):
         self.manifold = manifold
-        if mean is None:
-            mean = self.manifold.identity
-        self.mean = mean
+        self.mean = mean if mean is not None else manifold.identity
         # NOTE: assuming diagonal scale
         self.scale = (
             jnp.ones((mean.shape)) * scale
