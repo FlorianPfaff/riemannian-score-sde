@@ -18,8 +18,7 @@
 # pytype: skip-file
 """Various sampling methods."""
 import abc
-import functools
-from typing import Callable, Tuple
+from typing import Tuple
 
 import jax
 import jax.numpy as jnp
