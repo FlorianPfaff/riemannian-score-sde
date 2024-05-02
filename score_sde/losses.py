@@ -17,7 +17,7 @@
 """All functions related to loss computation and optimization.
 """
 
-from typing import Callable, Tuple, Any
+from typing import Tuple, Any
 
 import jax
 import optax
