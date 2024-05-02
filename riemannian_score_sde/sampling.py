@@ -6,7 +6,6 @@ import jax.numpy as jnp
 
 from score_sde.utils import batch_mul
 from score_sde.sampling import (
-    get_pc_sampler,
     Predictor,
     Corrector,
     register_predictor,
