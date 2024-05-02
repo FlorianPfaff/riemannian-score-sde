@@ -6,11 +6,15 @@ from typing import Tuple
 import jax.numpy as jnp
 import jax.random as random
 
-from score_sde.utils import batch_mul
-from score_sde.models import SDEPushForward, MoserFlow
-from score_sde.utils import ParametrisedScoreFunction
-from score_sde.models import div_noise, get_riemannian_div_fn
+from score_sde.utils import batch_mul, ParametrisedScoreFunction
+from score_sde.models import SDEPushForward, MoserFlow, div_noise, get_riemannian_div_fn
 
+def loss_base(rng, batch, sde, transform, model, params, states, train, score_manipulation_fn):
+    """Base function for loss calculation to be used by specific loss functions."""
+    score_fn = sde.reparametrise_score_fn(model, params, states, train, True)
+    y_0, context = transform.inv(batch["data"]), batch["context"]
+    t = random.uniform(rng, (y_0.shape[0],), minval=sde.t0 + 1e-3, maxval=sde.tf)
+    return score_fn, y_0, context, t
 
 def get_dsm_loss_fn(
     pushforward: SDEPushForward,
@@ -26,14 +30,10 @@ def get_dsm_loss_fn(
     def loss_fn(
         rng, params: dict, states: dict, batch: dict
     ) -> Tuple[float, dict]:
-        score_fn = sde.reparametrise_score_fn(model, params, states, train, True)
-        y_0, context = pushforward.transform.inv(batch["data"]), batch["context"]
+        rng, step_rng = random.split(rng)
+        score_fn, y_0, context, t = loss_base(step_rng, batch, sde, pushforward.transform, model, params, states, train, lambda x: x)
 
         rng, step_rng = random.split(rng)
-        # uniformly sample from SDE timeframe
-        t = random.uniform(step_rng, (y_0.shape[0],), minval=sde.t0 + eps, maxval=sde.tf)
-        rng, step_rng = random.split(rng)
-
         # sample p(y_t | y_0)
         # compute $\nabla \log p(y_t | y_0)$
         if s_zero:  # l_{t|0}
@@ -75,7 +75,6 @@ def get_dsm_loss_fn(
 
     return loss_fn
 
-
 def get_ism_loss_fn(
     pushforward: SDEPushForward,
     model: ParametrisedScoreFunction,
@@ -89,11 +88,8 @@ def get_ism_loss_fn(
     def loss_fn(
         rng, params: dict, states: dict, batch: dict
     ) -> Tuple[float, dict]:
-        score_fn = sde.reparametrise_score_fn(model, params, states, train, True)
-        y_0, context = pushforward.transform.inv(batch["data"]), batch["context"]
-
         rng, step_rng = random.split(rng)
-        t = random.uniform(step_rng, (y_0.shape[0],), minval=sde.t0 + eps, maxval=sde.tf)
+        score_fn, y_0, context, t = loss_base(step_rng, batch, sde, pushforward.transform, model, params, states, train, lambda x: x)
 
         rng, step_rng = random.split(rng)
         y_t = sde.marginal_sample(step_rng, y_0, t)
