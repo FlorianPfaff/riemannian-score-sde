@@ -12,7 +12,6 @@ import seaborn as sns
 # plt.rcParams["font.family"] = ["Computer Modern Roman"]
 # plt.rcParams.update({"font.size": 20})
 
-import geomstats.backend as gs
 import geomstats.visualization as visualization
 from geomstats.geometry.hypersphere import Hypersphere
 from geomstats.geometry.hyperbolic import Hyperbolic, PoincareBall, Hyperboloid
@@ -68,7 +67,6 @@ def set_aspect_equal_3d(ax):
 
 
 def get_sphere_coords():
-    radius = 1.0
     # set_aspect_equal_3d(ax)
     n = 200
     u = np.linspace(0, 2 * np.pi, n)
@@ -82,16 +80,10 @@ def get_sphere_coords():
 
 
 def sphere_plot(ax, color="grey"):
-    # assert manifold.dim == 2
     x, y, z = get_sphere_coords()
     ax.plot_surface(x, y, z, rstride=4, cstride=4, color=color, linewidth=0, alpha=0.2)
 
     return ax
-
-    # ax.set_xlim3d(-radius, radius)
-    # ax.set_ylim3d(-radius, radius)
-    # ax.set_zlim3d(-radius, radius)
-
 
 def remove_background(ax):
     ax.set_axis_off()
