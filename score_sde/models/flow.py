@@ -126,7 +126,7 @@ class PushForward:
             z, inv_logdets, nfe = flow(
                 y, context, rng=rng, tf=tf, t0=t0
             )  # NOTE: flow is not reversed
-            log_prob = self.base.log_prob(z).reshape(-1)
+            log_prob = self.base.ln_pdf(z).reshape(-1)
             log_prob += inv_logdets
             if transform:
                 log_prob -= self.transform.log_abs_det_jacobian(y, x)
@@ -167,7 +167,7 @@ class SDEPushForward(PushForward):
         elif self.diffeq == "sde":  # via stochastic process
 
             def sample(rng, shape, context, z=None):
-                z = self.base.sample(rng, shape) if z is None else z
+                z = self.base.sample(shape[0]) if z is None else z
                 score_fn = self.sde.reparametrise_score_fn(*model_w_dicts)
                 score_fn = partial(score_fn, context=context)
                 sde = self.sde.reverse(score_fn) if reverse else self.sde

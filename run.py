@@ -154,7 +154,7 @@ def run(cfg):
                 model_w_dicts, train=False, reverse=False, **sampler_kwargs
             )
             zT = sampler(rng, None, context, z=transform.inv(x0))
-            plt = plot_ref(model_manifold, transform.inv(zT), log_prob=base.log_prob)
+            plt = plot_ref(model_manifold, transform.inv(zT), log_prob=base.ln_pdf)
             logger.log_plot(f"xT_fwd", plt, step)
 
     ### Main

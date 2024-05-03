@@ -6,11 +6,10 @@ from score_sde.models import get_score_fn
 from score_sde.utils import batch_mul
 from riemannian_score_sde.sampling import get_pc_sampler
 from riemannian_score_sde.models.distribution import (
-    UniformDistribution,
     MultivariateNormal,
     WrapNormDistribution,
 )
-
+from riemannian_score_sde.models.distribution import get_uniform_distribution
 
 class RSDE(RSDEBase):
     def __init__(self, sde: SDE, score_fn):
@@ -103,7 +102,7 @@ class Brownian(Langevin):
         """Construct a Brownian motion on a compact manifold"""
         # super().__init__(beta_schedule, manifold, N=N)
         self.manifold = manifold
-        self.limiting = UniformDistribution(manifold)
+        self.limiting = get_uniform_distribution(manifold)
         self.N = N
 
         self.beta_schedule = beta_schedule

@@ -7,20 +7,12 @@ from distrax import MultivariateNormalDiag
 from geomstats.geometry.hypersphere import Hypersphere
 from pyrecest.distributions import HypersphericalUniformDistribution
 
-class UniformDistribution:
-    """Uniform density on compact manifold"""
 
-    def __init__(self, manifold, **kwargs):
-        self.manifold = manifold
-        if isinstance(manifold, Hypersphere):
-            self.dist = HypersphericalUniformDistribution(manifold.dim)
+def get_uniform_distribution(manifold):
+    if isinstance(manifold, Hypersphere):
+        return HypersphericalUniformDistributionWithGrad(manifold.dim)
 
-    def sample(self, _, shape):
-        return self.dist.sample(shape[0])
-
-    def log_prob(self, z):
-        return self.dist.ln_pdf(z)
-
+class HypersphericalUniformDistributionWithGrad(HypersphericalUniformDistribution):
     def grad_U(self, x):
         return jnp.zeros_like(x)
 
