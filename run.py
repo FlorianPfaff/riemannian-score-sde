@@ -1,4 +1,5 @@
 import os
+import re
 import socket
 import logging
 from timeit import default_timer as timer
@@ -203,7 +204,11 @@ def run(cfg):
 
     def model(y, t, context=None):
         """Vector field s_\theta: y, t, context -> T_y M"""
-        output_shape = get_class(cfg.generator._target_).output_shape(model_manifold)
+        if bool(re.search(r"OpenHemisphere.*$", cfg.manifold._target_)) or bool(re.search(r"Hypersphere.*$", cfg.manifold._target_)):
+            output_shape = cfg.manifold.dim + 1
+        else:
+            raise NotImplementedError(f"Manifold {cfg.manifold} not implemented")
+
         score = instantiate(
             cfg.generator,
             cfg.architecture,
