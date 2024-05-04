@@ -1,12 +1,11 @@
 import numpy as np
-import jax.numpy as jnp
 
 from geomstats.geometry.euclidean import Euclidean
 from score_sde.sde import SDE
 from distrax import MultivariateNormalDiag
 from geomstats.geometry.hypersphere import Hypersphere
 from pyrecest.distributions import HypersphericalUniformDistribution
-
+from geomstats.backend import zeros_like, zeros, ones, array
 
 def get_uniform_distribution(manifold):
     if isinstance(manifold, Hypersphere):
@@ -14,13 +13,13 @@ def get_uniform_distribution(manifold):
 
 class HypersphericalUniformDistributionWithGrad(HypersphericalUniformDistribution):
     def grad_U(self, x):
-        return jnp.zeros_like(x)
+        return zeros_like(x)
 
 
 class MultivariateNormal(MultivariateNormalDiag):
     def __init__(self, dim, mean=None, scale=None, **kwargs):
-        mean = jnp.zeros((dim)) if mean is None else mean
-        scale = jnp.ones((dim)) if scale is None else scale
+        mean = zeros((dim)) if mean is None else mean
+        scale = ones((dim)) if scale is None else scale
         super().__init__(mean, scale)
 
     def sample(self, rng, shape):
@@ -39,8 +38,8 @@ class DefaultDistribution:
             return flow.limiting
         else:
             if isinstance(manifold, Euclidean):
-                zeros = jnp.zeros((manifold.dim))
-                ones = jnp.ones((manifold.dim))
+                zeros = zeros((manifold.dim))
+                ones = ones((manifold.dim))
                 return MultivariateNormalDiag(zeros, ones)
             elif hasattr(manifold, "random_uniform"):
                 return UniformDistribution(manifold)
@@ -55,9 +54,9 @@ class WrapNormDistribution:
         self.mean = mean if mean is not None else manifold.identity
         # NOTE: assuming diagonal scale
         self.scale = (
-            jnp.ones((mean.shape)) * scale
+            ones((mean.shape)) * scale
             if isinstance(scale, float)
-            else jnp.array(scale)
+            else array(scale)
         )
 
     def sample(self, rng, shape):
@@ -73,7 +72,7 @@ class WrapNormDistribution:
     def log_prob(self, z):
         tangent_vec = self.manifold.metric.log(z, self.mean)
         tangent_vec = self.manifold.metric.transpback0(self.mean, tangent_vec)
-        zero = jnp.zeros((self.manifold.dim))
+        zero = zeros((self.manifold.dim))
         # TODO: to refactor axis contenation / removal
         if self.scale.shape[-1] == self.manifold.dim:  # poincare
             scale = self.scale
