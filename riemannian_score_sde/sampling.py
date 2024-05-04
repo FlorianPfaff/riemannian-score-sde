@@ -40,7 +40,7 @@ class EulerMaruyamaManifoldPredictor(Predictor):
             )
 
         tangent_vector = tangent_vector.reshape(shape)
-        x = self.sde.manifold.exp(tangent_vec=tangent_vector, base_point=x)
+        x = self.sde.manifold.metric.exp(tangent_vec=tangent_vector, base_point=x)
         return x, x
 
 
