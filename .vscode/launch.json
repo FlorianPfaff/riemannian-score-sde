@@ -31,7 +31,8 @@
                 "steps=1000"
             ],
             "env": {
-                "HYDRA_FULL_ERROR": "1"
+                "HYDRA_FULL_ERROR": "1",
+                "PYRECEST_BACKEND": "jax"
             }
         }
     ]
