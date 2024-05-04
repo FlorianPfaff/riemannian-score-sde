@@ -1,6 +1,7 @@
 import math
 import importlib
 from functools import partial
+from math import pi
 
 import matplotlib.animation as animation
 import matplotlib.pyplot as plt
@@ -22,7 +23,6 @@ from geomstats.geometry.special_orthogonal import (
 )
 from geomstats.geometry.product_manifold import ProductSameManifold
 
-import jax
 from jax import numpy as jnp
 import numpy as np
 from scipy.stats import norm
@@ -125,7 +125,7 @@ def get_spherical_grid(N, eps=0.0):
     lon = jnp.linspace(-180 + eps, 180 - eps, N)
     Lat, Lon = jnp.meshgrid(lat, lon)
     latlon_xs = jnp.concatenate([Lat.reshape(-1, 1), Lon.reshape(-1, 1)], axis=-1)
-    spherical_xs = jnp.pi * (latlon_xs / 180.0) + jnp.array([jnp.pi / 2, jnp.pi])[None, :]
+    spherical_xs = pi * (latlon_xs / 180.0) + jnp.array([pi / 2, pi])[None, :]
     xs = Hypersphere(2).spherical_to_extrinsic(spherical_xs)
     return xs, lat, lon
 
@@ -335,7 +335,7 @@ def proj_t2(x):
             [jnp.arctan2(x[..., 0], x[..., 1]), jnp.arctan2(x[..., 2], x[..., 3])],
             axis=-1,
         ),
-        jnp.pi * 2,
+        pi * 2,
     )
 
 
@@ -354,8 +354,8 @@ def plot_t2(x0, xt, size, **kwargs):
         axes[i].scatter(x[..., 0], x[..., 1], s=0.1)
 
     for ax in axes:
-        ax.set_xlim([0, 2 * jnp.pi])
-        ax.set_ylim([0, 2 * jnp.pi])
+        ax.set_xlim([0, 2 * pi])
+        ax.set_ylim([0, 2 * pi])
         ax.set_aspect("equal")
 
     plt.close(fig)
@@ -396,8 +396,8 @@ def plot_tn(x0, xt, size, **kwargs):
 
     axes = [item for sublist in axes for item in sublist]
     for ax in axes:
-        ax.set_xlim([0, 2 * jnp.pi])
-        ax.set_ylim([0, 2 * jnp.pi])
+        ax.set_xlim([0, 2 * pi])
+        ax.set_ylim([0, 2 * pi])
         ax.set_aspect("equal")
 
     plt.close(fig)
@@ -424,7 +424,7 @@ def plot_t1(x0, xt, size, **kwargs):
         plt.scatter(jnp.zeros_like(x), x, marker="|")
 
     for ax in axes:
-        ax.set_xlim([0, 2 * jnp.pi])
+        ax.set_xlim([0, 2 * pi])
 
     plt.close(fig)
     return fig
