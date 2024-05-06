@@ -41,8 +41,6 @@ class DefaultDistribution:
                 zeros = zeros((manifold.dim))
                 ones = ones((manifold.dim))
                 return MultivariateNormalDiag(zeros, ones)
-            elif hasattr(manifold, "random_uniform"):
-                return UniformDistribution(manifold)
             else:
                 # TODO: WrappedNormal
                 raise NotImplementedError(f"No default distribution for {manifold}")
