@@ -102,14 +102,13 @@ def latlon_from_cartesian(points):
 
 
 def cartesian_from_latlong(points):
-    lat = points[..., 0]
-    lon = points[..., 1]
+    from pyrecest.distributions import AbstractSphereSubsetDistribution
+    lat = points[..., 0]  # Assuming latitude is in radians
+    lon = points[..., 1]  # Assuming longitude is in radians
 
-    x = jnp.cos(lat) * jnp.cos(lon)
-    y = jnp.cos(lat) * jnp.sin(lon)
-    z = jnp.sin(lat)
-
-    return jnp.stack([x, y, z], axis=-1)
+    inclination = np.pi / 2 - lat  # Convert latitude to inclination
+    # Convert using the static method assuming inclination and azimuth
+    return AbstractSphereSubsetDistribution._sph_to_cart_inclination(inclination, lon, 'inclination')
 
 
 def get_spherical_grid(N, eps=0.0):
