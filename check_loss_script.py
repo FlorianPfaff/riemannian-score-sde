@@ -1,7 +1,7 @@
 import re
 import argparse
 
-def check_train_loss(log_file_path, max_loss):
+def check_train_loss(log_file_path, max_loss, max_z_diff):
     with open(log_file_path, 'r') as file:
         data = file.readlines()
 
@@ -32,17 +32,18 @@ def check_train_loss(log_file_path, max_loss):
         exit(1)  # Causes the GitHub Action to fail if the condition is not met
 
     # Check the condition for Z value
-    if last_z_value is not None and abs(last_z_value - 1.0) <= 0.02:
-        print("Success: The Z value in the last row deviates at most 0.02 from 1.")
+    if last_z_value is not None and abs(last_z_value - 1.0) <= max_z_diff:
+        print(f"Success: The Z value in the last row deviates at most {max_z_diff} from 1.")
     else:
-        print(f"Failure: The Z value in the last row deviates more than 0.02 from 1. It is {last_z_value}.")
+        print(f"Failure: The Z value in the last row deviates more than {max_z_diff} from 1. It is {last_z_value}.")
         exit(1)  # Causes the GitHub Action to fail if the condition is not met
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Check the train loss from a log file.")
-    parser.add_argument("log_file_path", type=str, help="Path to the log file.")
-    parser.add_argument("max_loss", type=float, help="Maximum acceptable train loss.")
+    parser.add_argument("--log_file_path", type=str, help="Path to the log file.")
+    parser.add_argument("--max_loss", type=float, help="Maximum acceptable train loss.")
+    parser.add_argument("--max_z_diff", type=float, help="Maximum acceptable train loss.")
     args = parser.parse_args()
 
-    check_train_loss(args.log_file_path, args.max_loss)
+    check_train_loss(args.log_file_path, args.max_loss, args.max_z_diff)

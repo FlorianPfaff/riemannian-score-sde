@@ -10,6 +10,7 @@ from geomstats.geometry.special_orthogonal import (
     _SpecialOrthogonal3Vectors,
 )
 from riemannian_score_sde.utils.vis import make_disk_grid
+from ..models.vector_field import OpenHemisphereWithWraparound
 
 # def compute_microbatch_split(x, K=1):
 #     """ Checks if batch needs to be broken down further to fit in memory. """
@@ -40,6 +41,31 @@ def get_spherical_grid(N, eps=0.0):
     lambda_x = jnp.sin(theta).reshape((-1))
     return xs, volume, lambda_x
 
+def get_hemispherical_grid(N, eps=0.0):
+        # Limit theta from 0 + eps to pi/2 - eps to only get the upper hemisphere
+        theta = jnp.linspace(eps, jnp.pi / 2 - eps, N // 2)
+        phi = jnp.linspace(eps, 2 * jnp.pi - eps, N)
+
+        # Create a meshgrid of theta and phi values
+        theta, phi = jnp.meshgrid(theta, phi)
+        theta = theta.reshape(-1, 1)
+        phi = phi.reshape(-1, 1)
+
+        # Convert spherical coordinates to Cartesian coordinates (x, y, z)
+        xs = jnp.concatenate([
+            jnp.sin(theta) * jnp.cos(phi),  # x = r*sin(theta)*cos(phi)
+            jnp.sin(theta) * jnp.sin(phi),  # y = r*sin(theta)*sin(phi)
+            jnp.cos(theta)                # z = r*cos(theta)
+        ], axis=-1)
+
+        # Half of the number for the entire sphere
+        volume = jnp.pi**2
+
+        # Weights for integration over the hemisphere
+        # Weight each point by sin(theta) due to the spherical coordinate integration measure
+        lambda_x = jnp.sin(theta).reshape((-1))
+
+        return xs, volume, lambda_x
 
 def get_so3_grid(N, eps=0.0):
     angle1 = jnp.linspace(-jnp.pi + eps, jnp.pi - eps, N)
@@ -120,6 +146,11 @@ def compute_normalization(
     elif isinstance(manifold, _SpecialOrthogonalMatrices) and manifold.dim == 3:
         N = N if N is not None else 50
         xs, volume, lambda_x = get_so3_grid(N, eps=1e-3)
+    elif isinstance(manifold, OpenHemisphereWithWraparound):
+        # We use a different convention for the hemisphere
+        # than geomstats for the open hemisphere, but that shouldn't matter
+        N = N if N is not None else 200
+        xs, volume, lambda_x = get_hemispherical_grid(N, eps)
     # elif isinstance(manifold, PoincareBall):
     #     N = N if N is not None else 100
     #     xs, volume, lambda_x = make_disk_grid(N, dim=manifold.dim)
@@ -127,7 +158,7 @@ def compute_normalization(
     #     N = N if N is not None else 100
     #     xs, volume, lambda_x = make_hyp_grid(N, dim=manifold.dim)
     else:
-        print("Only integration over R^d, S^2, H2 and SO(3) is implemented.")
+        print("Only integration over R^d, S^2, hemisphere, H2 and SO(3) is implemented.")
         return 0.0
     context = (
         context

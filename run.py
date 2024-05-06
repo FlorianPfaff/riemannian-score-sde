@@ -11,7 +11,7 @@ import optax
 import haiku as hk
 
 from omegaconf import OmegaConf
-from hydra.utils import instantiate, get_class
+from hydra.utils import instantiate
 
 from score_sde.models.flow import SDEPushForward
 from score_sde.losses import get_ema_loss_step_fn

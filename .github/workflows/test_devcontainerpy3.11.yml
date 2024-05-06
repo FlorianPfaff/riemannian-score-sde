@@ -14,7 +14,7 @@ jobs:
 
     strategy:
       matrix:
-        experiment: [s2_toy, s2_symm]
+        experiment: [s2_toy, s2_symm, s2_watson]
 
     steps:
       - name: Checkout code
@@ -38,11 +38,24 @@ jobs:
           
           # Run the experiment based on matrix variable
           docker exec -e HYDRA_FULL_ERROR=1 -e PYRECEST_BACKEND=numpy -e GEOMSTATS_BACKEND=jax $container_id python /workspace/main.py experiment=${{ matrix.experiment }} steps=1000 hydra.job.chdir=False
-          if [ "${{ matrix.experiment }}" == "s2_toy" ]; then
-            MAX_LOSS=0.5
-          else
-            MAX_LOSS=0.8
-          fi
-          docker exec $container_id python /workspace/check_loss_script.py ./logs/version_0/metrics.csv $MAX_LOSS
+          case "${{ matrix.experiment }}" in
+            "s2_toy")
+              MAX_LOSS=0.5
+              MAX_Z_DIFF=0.02
+              ;;
+            "s2_symm")
+              MAX_LOSS=0.8
+              MAX_Z_DIFF=0.02
+              ;;
+            "s2_watson")
+              MAX_LOSS=0.55
+              MAX_Z_DIFF=0.4
+              ;;
+            *)
+              echo "Error: Invalid scenario"
+              exit 1
+              ;;
+          esac
+          docker exec $container_id python /workspace/check_loss_script.py --log_file_path ./logs/version_0/metrics.csv --max_loss $MAX_LOSS --max_z_diff $MAX_Z_DIFF
 
           

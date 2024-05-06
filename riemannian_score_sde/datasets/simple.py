@@ -13,8 +13,18 @@ from geomstats.algebra_utils import from_vector_to_diagonal_matrix
 from riemannian_score_sde.models.distribution import (
     WrapNormDistribution as WrappedNormal,
 )
-from pyrecest.distributions import VonMisesFisherDistribution
+from pyrecest.distributions import VonMisesFisherDistribution, HyperhemisphericalWatsonDistribution
 from pyrecest.backend import array
+
+from typing import Union
+
+# pylint: disable=no-name-in-module,no-member
+from pyrecest.backend import allclose, array, concatenate, int32, int64, zeros, where
+
+from pyrecest.distributions import (
+    AbstractHyperhemisphericalDistribution, WatsonDistribution
+)
+
 
 class Uniform:
     def __init__(self, batch_dims, manifold, seed, **kwargs):
@@ -33,6 +43,29 @@ class Uniform:
         return (samples, None)
 
 
+class WatsonDataset:
+    def __init__(self, batch_dims, rng, manifold, mu, kappa, **kwargs):
+        self.manifold = manifold
+        self.mu = jnp.array(mu)
+        # Flip mu because geomstats assumes positivity in the first coordinate, pyrecest in the last
+        assert manifold.belongs(self.mu[::-1])
+        self.kappa = jnp.array([kappa])
+        self.batch_dims = batch_dims
+        self.rng = rng
+        self.dist = HyperhemisphericalWatsonDistribution(array(mu), kappa)
+
+    def __iter__(self):
+        return self
+    
+    def __next__(self):
+        samples = self.dist.sample(np.prod(self.batch_dims))
+        
+        batch_dims = (self.batch_dims,) if isinstance(self.batch_dims, int) else self.batch_dims
+        samples = samples.reshape([*batch_dims, samples.shape[-1]])
+
+        return (samples, None)
+
+
 class vMFDataset:
     def __init__(self, batch_dims, rng, manifold, mu, kappa, **kwargs):
         self.manifold = manifold
@@ -42,13 +75,13 @@ class vMFDataset:
         self.kappa = jnp.array([kappa])
         self.batch_dims = batch_dims
         self.rng = rng
-        self.vmf = VonMisesFisherDistribution(array(mu), kappa)
+        self.dist = VonMisesFisherDistribution(array(mu), kappa)
 
     def __iter__(self):
         return self
 
     def __next__(self):
-        samples = self.vmf.sample(np.prod(self.batch_dims))
+        samples = self.dist.sample(np.prod(self.batch_dims))
         
         batch_dims = (self.batch_dims,) if isinstance(self.batch_dims, int) else self.batch_dims
         samples = samples.reshape([*batch_dims, samples.shape[-1]])
@@ -62,6 +95,45 @@ class vMFDataset:
             - (self.kappa + jnp.log(ive(self.d / 2 - 1, self.kappa)))
         )
         return output.reshape([1, *output.shape[:-1]])
+
+    def log_prob(self, x):
+        return self._log_unnormalized_prob(x) - self._log_normalization()
+
+    def _log_unnormalized_prob(self, x):
+        output = self.kappa * (jnp.expand_dims(self.mu, 0) * x).sum(-1, keepdims=True)
+        return output.reshape([*output.shape[:-1]])
+
+    def entropy(self):
+        output = (
+            -self.kappa
+            * ive(self.d / 2, self.kappa)
+            / ive((self.d / 2) - 1, self.kappa)
+        )
+        return output.reshape([*output.shape[:-1]]) + self._log_normalization()
+
+
+
+class WatsonS2Dataset:
+    def __init__(self, batch_dims, rng, manifold, mu, kappa, **kwargs):
+        self.manifold = manifold
+        # Flip mu because geomstats assumes positivity in the first coordinate, pyrecest in the last
+        assert manifold.belongs(array(mu[::-1]))
+        self.batch_dims = batch_dims
+        self.dist = HyperhemisphericalWatsonDistribution(array(mu), kappa)
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        samples = self.dist.sample(np.prod(self.batch_dims))
+        
+        batch_dims = (self.batch_dims,) if isinstance(self.batch_dims, int) else self.batch_dims
+        samples = samples.reshape([*batch_dims, samples.shape[-1]])
+
+        return (samples, None)
+
+    def _log_normalization(self):
+        return self.dist.ln_norm_const
 
     def log_prob(self, x):
         return self._log_unnormalized_prob(x) - self._log_normalization()

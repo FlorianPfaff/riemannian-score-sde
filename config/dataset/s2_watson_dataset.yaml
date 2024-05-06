@@ -1,0 +1,7 @@
+_target_: riemannian_score_sde.datasets.WatsonDataset
+_convert_: partial
+batch_dims:
+  - ${batch_size}
+mu: [0.5, 0.5, 0.7071068]
+kappa: 15
+manifold: ${manifold}

@@ -9,12 +9,10 @@ import matplotlib.colors as mcolors
 from matplotlib.patches import Circle
 import seaborn as sns
 
-# plt.rcParams["text.usetex"] = True
-# plt.rcParams["font.family"] = ["Computer Modern Roman"]
-# plt.rcParams.update({"font.size": 20})
 
 import geomstats.visualization as visualization
 from geomstats.geometry.hypersphere import Hypersphere
+from geomstats.geometry.open_hemisphere import OpenHemisphere
 from geomstats.geometry.hyperbolic import Hyperbolic, PoincareBall, Hyperboloid
 from geomstats.geometry.euclidean import Euclidean
 from geomstats.geometry.special_orthogonal import (
@@ -189,9 +187,7 @@ def earth_plot(cfg, log_prob, train_ds, test_ds, N, azimuth=None, samples=None):
         # norm = mcolors.PowerNorm(3.)  # NOTE: tweak that value
         norm = mcolors.PowerNorm(0.2)  # N=500
         fs = np.array(fs)
-        # print(np.min(fs).item(), jnp.quantile(fs, np.array([0.1, 0.5, 0.9])), np.max(fs).item())
         fs = norm(fs)
-        # print(np.min(fs).item(), jnp.quantile(fs, np.array([0.1, 0.5, 0.9])), np.max(fs).item())
 
         # create figure with earth features
         for i, proj in enumerate(projs):
@@ -650,7 +646,7 @@ def plot(manifold, x0, xt, log_prob=None, size=10):
     prob = None if log_prob is None else lambda x: jnp.exp(log_prob(x))
     if isinstance(manifold, Euclidean) and manifold.dim == 3:
         fig = plot_3d(x0, xt, size, prob=prob)
-    elif isinstance(manifold, Hypersphere) and manifold.dim == 2:
+    elif (isinstance(manifold, Hypersphere) or isinstance(manifold, OpenHemisphere)) and manifold.dim == 2:
         fig = plot_3d(x0, xt, size, prob=prob)
     elif isinstance(manifold, _SpecialOrthogonalMatrices) and manifold.dim == 3:
         fig = plot_so3(x0, xt, size, prob=prob)

@@ -3,6 +3,22 @@
     "configurations": [
 
         {
+            "name": "s2_watson",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "main.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "args": [
+                "experiment=s2_watson",
+                "hydra.job.chdir=False",
+                "steps=1000"
+            ],
+            "env": {
+                "HYDRA_FULL_ERROR": "1"
+            },
+        },
+        {
             "name": "s2_toy",
             "type": "debugpy",
             "request": "launch",

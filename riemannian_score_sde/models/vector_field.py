@@ -2,11 +2,17 @@ import abc
 
 import haiku as hk
 import jax.numpy as jnp
+import jax
 
 from hydra.utils import instantiate
-from geomstats.geometry.hypersphere import Hypersphere
+from geomstats.geometry.hypersphere import Hypersphere, HypersphereMetric, gegenbauer_polynomials
 from geomstats.geometry.base import LevelSet as EmbeddedManifold
-
+from geomstats.geometry.base import LevelSet
+from geomstats.geometry.open_hemisphere import OpenHemisphere
+from geomstats.backend import random, where, clip, linalg, arccos
+from geomstats.geometry.riemannian_metric import RiemannianMetric
+import geomstats.backend as gs
+from math import pi
 
 # def get_exact_div_fn(fi_fn, Xi=None):
 #     "flatten all but the last axis and compute the true divergence"
@@ -81,6 +87,208 @@ class DivFreeGenerator(VectorFieldGenerator):
         return jnp.zeros(shape)
 
 
+class OpenHemisphereWithWraparound(OpenHemisphere):
+    def _single_point_div_free_generators(self, x):
+        dim = x.shape[-1] - 1
+        generators = []
+        for i in range(dim):
+            for j in range(i + 1, dim + 1):
+                generator = jnp.zeros_like(x)
+                generator = generator.at[i].set(x[j])
+                generator = generator.at[j].set(-x[i])
+                generators.append(generator)
+        return jnp.stack(generators, axis=-1)
+    
+    def _log_heat_kernel(self, x0, x, t, n_max):
+        if len(t.shape) == len(x.shape):
+            t = t[..., 0]
+        t = t / 2  # NOTE: to match random walk
+        d = self.dim
+
+        cos_theta = gs.sum(x0 * x, axis=-1)
+        cos_theta = gs.clip(cos_theta, -1.0, 1.0)  # Ensure valid input for acos
+        theta = gs.arccos(cos_theta)
+
+        # Since hyperhemisphere:
+        # Ensure handling of both point and antipodal point
+        antipodal_theta = gs.arccos(-cos_theta)
+        theta = gs.minimum(theta, antipodal_theta)
+
+        if d == 1:
+            n = gs.expand_dims(gs.arange(-n_max, n_max + 1), axis=-1)
+            t = gs.expand_dims(t, axis=0)
+            sigma_squared = t
+            coeffs = gs.exp(-gs.power(theta + 2 * pi * n, 2) / 2 / sigma_squared)
+            prob = gs.sum(coeffs, axis=0)
+            prob = prob / gs.sqrt(2 * pi * sigma_squared[0])
+        else:
+            n = gs.expand_dims(gs.arange(0, n_max + 1), axis=-1)
+            t = gs.expand_dims(t, axis=0)
+            coeffs = (
+                gs.exp(-n * (n + 1) * t)
+                * (2 * n + d - 1)
+                / (d - 1)
+                / (Hypersphere(self.dim).volume/2)
+            )
+            P_n = gegenbauer_polynomials(
+                alpha=(self.dim - 1) / 2, l_max=n_max, x=cos_theta
+            )
+            prob = gs.sum(coeffs * P_n, axis=0)
+
+        return gs.log(prob)
+
+    
+    @staticmethod
+    def default_metric():
+        return HyperhemisphericalWraparoundMetric
+    
+    def random_walk(self, rng, x, t):
+        next_points = Hypersphere.random_walk(self, rng, x, t)
+        if not next_points:
+            return None
+        mask = (next_points[:, -1] < 0)[:, None]  # Shape becomes (batch_dim, 1)
+        # Mirror those on lower hemisphere
+        next_points = where(mask, -next_points, next_points)
+        return next_points
+    
+    def grad_marginal_log_prob(self, x0, x, t, thresh, n_max):
+        # Should be ok because the functions that it builds upon are adjusted
+        return LevelSet.grad_marginal_log_prob(self, x0, x, t, thresh, n_max)
+    
+    def grad_log_heat_kernel_exp(self, x0, x, t):
+        # Should be ok because the functions that it builds upon are adjusted
+        return LevelSet.grad_log_heat_kernel_exp(self, x0, x, t)
+
+    def div_free_generators(self, x):
+        """
+        Compute divergence-free vector fields on the hemisphere without worrying
+        about boundary conditions because the probability of reaching the boundary is zero.
+
+        Parameters
+        ----------
+        x : array-like, shape=[..., dim+1]
+            Points strictly inside the hemisphere, not including the boundary.
+
+        Returns
+        -------
+        generators : array-like
+            Divergence-free vector fields on the hemisphere,
+            shape=[..., dim+1, number of fields].
+        """
+        # Apply the generator function to each point in the batch
+        batched_generator = jax.vmap(self._single_point_div_free_generators, in_axes=0, out_axes=0)
+        return batched_generator(x)
+    
+    def random_normal_tangent(self, state, base_point, n_samples=1):
+        """
+        Generate random tangent vectors on the hemisphere.
+
+        Parameters
+        ----------
+        state : PRNGKey
+            JAX PRNG key.
+        base_point : array-like, shape=[..., dim+1]
+            Base points on the hemisphere.
+        n_samples : int
+            Number of samples to generate.
+
+        Returns
+        -------
+        tangent_vec : array-like, shape=[..., dim+1]
+            Random tangent vectors on the hemisphere.
+        """
+        mirror_flag = jax.random.bernoulli(state, shape=(base_point.shape[0],), p=0.5)
+        state, ambiant_noise = random.normal(
+            state=state, size=(n_samples, base_point.shape[-1])
+        )
+        base_points_half_mirrored = where(mirror_flag[:, None], -base_point, base_point)
+        return state, self.to_tangent(vector=ambiant_noise, base_point=base_points_half_mirrored)
+
+
+class HyperhemisphericalWraparoundMetric(RiemannianMetric):
+    """Class for the Hyperhemispherical Metric with antipodal symmetry."""
+
+    def inner_product(self, tangent_vec_a, tangent_vec_b, base_point=None):
+        """Compute the inner-product of two tangent vectors at a base point, respecting antipodal symmetry.
+
+        Parameters
+        ----------
+        tangent_vec_a : array-like, shape=[..., dim + 1]
+            First tangent vector at base point.
+        tangent_vec_b : array-like, shape=[..., dim + 1]
+            Second tangent vector at base point.
+        base_point : array-like, shape=[..., dim + 1], optional
+            Point on the hypersphere.
+
+        Returns
+        -------
+        inner_prod : array-like, shape=[...,]
+            Inner-product of the two tangent vectors.
+        """
+        return self._space.embedding_space.metric.inner_product(
+            tangent_vec_a, tangent_vec_b, base_point
+        )
+
+    def exp(self, tangent_vec, base_point):
+        exp_points = HypersphereMetric.exp(self, tangent_vec, base_point)
+        # Reflect if the exp_point is outside the intended hyperhemisphere
+        mask = (exp_points[:, -1] < 0)[:, None]  # Shape becomes (16384, 1)
+
+        exp_points = where(mask, -exp_points, exp_points)
+        return exp_points
+
+    def log(self, point, base_point):
+        # Determine if point or -point is closer to base_point
+        direct_logs = HypersphereMetric.log(self, point, base_point)
+        antipodal_logs = HypersphereMetric.log(self, -point, base_point)
+        
+        # Compute norms (distances) for direct and antipodal logs
+        direct_distances = linalg.norm(direct_logs, axis=1)
+        antipodal_distances = linalg.norm(antipodal_logs, axis=1)
+        
+        # Compare distances and choose the shorter for each pair in the batch
+        mask = antipodal_distances < direct_distances
+        result_logs = where(mask[:, None], antipodal_logs, direct_logs)
+        return result_logs
+
+    def dist(self, point_a, point_b):
+        """Compute the geodesic distance between two points, considering symmetry.
+
+        Parameters
+        ----------
+        point_a : array-like, shape=[..., dim + 1]
+            First point on the hypersphere.
+        point_b : array-like, shape=[..., dim + 1]
+            Second point on the hypersphere.
+
+        Returns
+        -------
+        dist : array-like, shape=[..., 1]
+            Geodesic distance between the two points.
+        """
+        inner_prod = point_a @ point_b
+        if inner_prod < 0:
+            inner_prod = -inner_prod
+        cos_angle = clip(inner_prod / (linalg.norm(point_a) * linalg.norm(point_b)), -1, 1)
+        return arccos(cos_angle)
+
+    def squared_dist(self, point_a, point_b):
+        """Squared geodesic distance between two points, considering symmetry.
+
+        Parameters
+        ----------
+        point_a : array-like, shape=[..., dim]
+            Point on the hypersphere.
+        point_b : array-like, shape=[..., dim]
+            Point on the hypersphere.
+
+        Returns
+        -------
+        sq_dist : array-like, shape=[...,]
+        """
+        return self.dist(point_a, point_b) ** 2
+
+
 class EigenGenerator(VectorFieldGenerator):
     """Gradient of laplacien eigenfunctions with eigenvalue=1"""
 
@@ -108,7 +316,7 @@ class AmbientGenerator(VectorFieldGenerator):
 
     @staticmethod
     def output_shape(manifold):
-        if isinstance(manifold, EmbeddedManifold):
+        if isinstance(manifold, EmbeddedManifold) or isinstance(manifold, LevelSet):
             output_shape = manifold.embedding_space.dim
         else:
             output_shape = manifold.dim

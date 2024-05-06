@@ -4,16 +4,47 @@ from geomstats.geometry.euclidean import Euclidean
 from score_sde.sde import SDE
 from distrax import MultivariateNormalDiag
 from geomstats.geometry.hypersphere import Hypersphere
-from pyrecest.distributions import HypersphericalUniformDistribution
+
 from geomstats.backend import zeros_like, zeros, ones, array
+from pyrecest.distributions import HypersphericalUniformDistribution, HyperhemisphericalWatsonDistribution, HyperhemisphericalUniformDistribution
+from riemannian_score_sde.models.vector_field import OpenHemisphereWithWraparound
 
 def get_uniform_distribution(manifold):
     if isinstance(manifold, Hypersphere):
         return HypersphericalUniformDistributionWithGrad(manifold.dim)
+    elif isinstance(manifold, OpenHemisphereWithWraparound):
+        return HyperhemisphericalUniformDistributionWithGrad(manifold.dim)
+    else:
+        raise NotImplementedError(f"No uniform distribution for {manifold}")
+
 
 class HypersphericalUniformDistributionWithGrad(HypersphericalUniformDistribution):
     def grad_U(self, x):
         return zeros_like(x)
+
+
+class HyperhemisphericalUniformDistributionWithGrad(HyperhemisphericalUniformDistribution):
+    def grad_U(self, x):
+        return zeros_like(x)
+
+
+class HyperhemisphericalWatsonDistributionWithGrad(HyperhemisphericalWatsonDistribution):
+    def grad_U(self, x):
+        """
+        Compute the gradient of the potential function U(x) for the Watson distribution.
+        
+        Parameters:
+        x : numpy.ndarray
+            A point on the unit sphere (should be a unit vector).
+        
+        Returns:
+        numpy.ndarray
+            The gradient of U at x.
+        """
+        x = x / np.linalg.norm(x)
+        mu_T_x = self.mu @ x  # Project x onto mu
+        grad_U = -2 * self.kappa * mu_T_x * self.mu
+        return grad_U
 
 
 class MultivariateNormal(MultivariateNormalDiag):
