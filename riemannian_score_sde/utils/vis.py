@@ -1,17 +1,14 @@
 import math
 import importlib
-from functools import partial
 from math import pi
 
-import matplotlib.animation as animation
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 from matplotlib.patches import Circle
 import seaborn as sns
+from geomstats.backend import mean, linspace, outer
 
-# plt.rcParams["text.usetex"] = True
-# plt.rcParams["font.family"] = ["Computer Modern Roman"]
-# plt.rcParams.update({"font.size": 20})
+from pyrecest.distributions import AbstractSphereSubsetDistribution
 
 import geomstats.visualization as visualization
 from geomstats.geometry.hypersphere import Hypersphere
@@ -47,9 +44,9 @@ def set_aspect_equal_3d(ax):
     ylim = ax.get_ylim3d()
     zlim = ax.get_zlim3d()
 
-    xmean = np.mean(xlim)
-    ymean = np.mean(ylim)
-    zmean = np.mean(zlim)
+    xmean = mean(xlim)
+    ymean = mean(ylim)
+    zmean = mean(zlim)
 
     plot_radius = max(
         [
@@ -67,14 +64,9 @@ def set_aspect_equal_3d(ax):
 
 
 def get_sphere_coords():
-    # set_aspect_equal_3d(ax)
-    n = 200
-    u = np.linspace(0, 2 * np.pi, n)
-    v = np.linspace(0, np.pi, n)
-
-    x = 1 * np.outer(np.cos(u), np.sin(v))
-    y = 1 * np.outer(np.sin(u), np.sin(v))
-    z = 1 * np.outer(np.ones(np.size(u)), np.cos(v))
+    theta_inc = linspace(0, np.pi, n)
+    phi_az_right = linspace(0, 2 * np.pi, n) 
+    x, y, z = AbstractSphereSubsetDistribution.sph_to_cart_inclination(theta_inc, phi_az_right, 'inclination')
 
     return x, y, z
 
@@ -121,8 +113,8 @@ def cartesian_from_latlong(points):
 
 
 def get_spherical_grid(N, eps=0.0):
-    lat = jnp.linspace(-90 + eps, 90 - eps, N // 2)
-    lon = jnp.linspace(-180 + eps, 180 - eps, N)
+    lat = linspace(-90 + eps, 90 - eps, N // 2)
+    lon = linspace(-180 + eps, 180 - eps, N)
     Lat, Lon = jnp.meshgrid(lat, lon)
     latlon_xs = jnp.concatenate([Lat.reshape(-1, 1), Lon.reshape(-1, 1)], axis=-1)
     spherical_xs = pi * (latlon_xs / 180.0) + jnp.array([pi / 2, pi])[None, :]
@@ -212,7 +204,7 @@ def earth_plot(cfg, log_prob, train_ds, test_ds, N, azimuth=None, samples=None):
             vmin, vmax = 0.0, 1.0
             # n_levels = 900
             n_levels = 200
-            levels = np.linspace(vmin, vmax, n_levels)
+            levels = linspace(vmin, vmax, n_levels)
             cmap = sns.cubehelix_palette(
                 light=1.0, dark=0.0, start=0.5, rot=-0.75, reverse=False, as_cmap=True
             )
@@ -231,7 +223,7 @@ def earth_plot(cfg, log_prob, train_ds, test_ds, N, azimuth=None, samples=None):
                 extend="both",
             )
 
-            alpha_gradient = np.linspace(0, 1, len(ax.collections))
+            alpha_gradient = linspace(0, 1, len(ax.collections))
             for col, alpha in zip(ax.collections, alpha_gradient):
                 col.set_alpha(alpha)
             # for col in ax.collections[0:1]:
@@ -378,21 +370,12 @@ def plot_tn(x0, xt, size, **kwargs):
         tight_layout=True,
         squeeze=False,
     )
-    # cmap = sns.mpl_palette("viridis")
     for i, x in enumerate([x0, xt]):
         if x is None:
             continue
         for j in range(n):
             x_ = proj_t2(x[..., (4 * j) : (4 * (j + 1))])
             axes[j][i].scatter(x_[..., 0], x_[..., 1], s=0.1)
-            # sns.kdeplot(
-            #     x=np.asarray(x_[..., 0]),
-            #     y=np.asarray(x_[..., 1]),
-            #     ax=axes[j][i],
-            #     cmap=cmap,
-            #     fill=True,
-            #     # levels=15,
-            # )
 
     axes = [item for sublist in axes for item in sublist]
     for ax in axes:
@@ -449,12 +432,12 @@ def plot_so3_uniform(x, size=10):
 
     for j in range(3):
         if j == 1:
-            grid = np.linspace(-np.pi / 2, np.pi / 2, 100)
+            grid = linspace(-np.pi / 2, np.pi / 2, 100)
             axes[j].set_xticks([grid[0], 0, grid[-1]])
             axes[j].set_xticklabels([r"$-\pi/2$", "0", r"$\pi/2$"], color="k")
             y = np.sin(grid + math.pi / 2) / 2
         else:
-            grid = np.linspace(-np.pi, np.pi, 100, endpoint=True)
+            grid = linspace(-np.pi, np.pi, 100, endpoint=True)
             axes[j].set_xticks([grid[0], 0, grid[-1]])
             axes[j].set_xticklabels([r"$-\pi$", "0", r"$\pi$"], color="k")
             y = 1 / (2 * np.pi) * np.ones_like(grid)
@@ -493,15 +476,15 @@ def plot_so3b(prob, lambda_x, N, size=10):
 
     for j in range(3):
         if j == 1:
-            grid = np.linspace(-np.pi / 2, np.pi / 2, N // 2)
+            grid = linspace(-np.pi / 2, np.pi / 2, N // 2)
             axes[j].set_xticks([grid[0], 0, grid[-1]])
             axes[j].set_xticklabels([r"$-\pi/2$", "0", r"$\pi/2$"], color="k")
         else:
-            grid = np.linspace(-np.pi, np.pi, N)
+            grid = linspace(-np.pi, np.pi, N)
             axes[j].set_xticks([grid[0], 0, grid[-1]])
             axes[j].set_xticklabels([r"$-\pi$", "0", r"$\pi$"], color="k")
 
-        y = jnp.mean(prob * lambda_x, axis=jnp.delete(jnp.arange(3), j))
+        y = jmean(prob * lambda_x, axis=jnp.delete(jnp.arange(3), j))
 
         axes[j].set(xlim=(grid[0], grid[-1]))
         axes[j].set_xlabel(x_labels[j], fontsize=30)
@@ -529,7 +512,7 @@ def plot_normal(x, dim, size=10):
     w = np.array(x)
 
     for j in range(w.shape[-1]):
-        grid = np.linspace(-3, 3, 100)
+        grid = linspace(-3, 3, 100)
         y = norm().pdf(grid)
         axes[j].hist(
             w[:, j],
@@ -553,7 +536,7 @@ def plot_normal(x, dim, size=10):
 def make_disk_grid(N, eps=1e-3, dim=2, radius=1.0):
     h = Hyperbolic(dim=dim, default_coords_type="ball")
     radius = radius - eps
-    x = jnp.linspace(-radius, radius, N)
+    x = jlinspace(-radius, radius, N)
     xs = dim * [x]
     xs = jnp.meshgrid(*xs)
     xs = jnp.concatenate([x.reshape(-1, 1) for x in xs], axis=-1)
