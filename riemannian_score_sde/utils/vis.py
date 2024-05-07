@@ -97,7 +97,7 @@ def latlon_from_cartesian(points):
 
     lat = -jnp.arcsin(z / r)
     lon = jnp.arctan2(y, x)
-    # lon = jnp.where(lon > 0, lon - math.pi, lon + math.pi)
+    # lon = jnp.where(lon > 0, lon - pi, lon + pi)
     return jnp.concatenate([jnp.expand_dims(lat, -1), jnp.expand_dims(lon, -1)], axis=-1)
 
 
@@ -234,13 +234,13 @@ def earth_plot(cfg, log_prob, train_ds, test_ds, N, azimuth=None, samples=None):
             train_idx = train_ds.dataset.indices
             test_idx = test_ds.dataset.indices
             if samples is not None:
-                samples = np.array(latlon_from_cartesian(samples)) * 180 / math.pi
+                samples = np.array(latlon_from_cartesian(samples)) * 180 / pi
                 points = projection.transform_points(
                     ccrs.Geodetic(), samples[:, 1], samples[:, 0]
                 )
                 ax.scatter(points[:, 0], points[:, 1], s=1.0, c=[colors[1]], alpha=1.0)
             samples = train_ds.dataset.dataset.data
-            samples = np.array(latlon_from_cartesian(samples)) * 180 / math.pi
+            samples = np.array(latlon_from_cartesian(samples)) * 180 / pi
             points = projection.transform_points(
                 ccrs.Geodetic(), samples[:, 1], samples[:, 0]
             )
@@ -299,12 +299,12 @@ def plot_so3(x0, xt, size, **kwargs):
                 # label=f"Component #{k}",
             )
             if j == 1:
-                axes[i, j].set(xlim=(-math.pi / 2, math.pi / 2))
-                axes[i, j].set_xticks([-math.pi / 2, 0, math.pi / 2])
+                axes[i, j].set(xlim=(-pi / 2, pi / 2))
+                axes[i, j].set_xticks([-pi / 2, 0, pi / 2])
                 axes[i, j].set_xticklabels([r"$-\pi/2$", "0", r"$\pi/2$"], color="k")
             else:
-                axes[i, j].set(xlim=(-math.pi, math.pi))
-                axes[i, j].set_xticks([-math.pi, 0, math.pi])
+                axes[i, j].set(xlim=(-pi, pi))
+                axes[i, j].set_xticks([-pi, 0, pi])
                 axes[i, j].set_xticklabels([r"$-\pi$", "0", r"$\pi$"], color="k")
             if j == 0:
                 axes[i, j].set_ylabel(y_labels[i], fontsize=30)
@@ -434,7 +434,7 @@ def plot_so3_uniform(x, size=10):
             grid = linspace(-np.pi / 2, np.pi / 2, 100)
             axes[j].set_xticks([grid[0], 0, grid[-1]])
             axes[j].set_xticklabels([r"$-\pi/2$", "0", r"$\pi/2$"], color="k")
-            y = np.sin(grid + math.pi / 2) / 2
+            y = np.sin(grid + pi / 2) / 2
         else:
             grid = linspace(-np.pi, np.pi, 100, endpoint=True)
             axes[j].set_xticks([grid[0], 0, grid[-1]])
