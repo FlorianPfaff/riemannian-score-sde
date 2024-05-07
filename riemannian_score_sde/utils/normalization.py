@@ -18,13 +18,13 @@ def get_spherical_grid(N, eps=0.0):
     phi = linspace(eps, 2 * pi - eps, N)
 
     theta, phi = meshgrid(theta, phi)
-    theta = theta.reshape(-1, 1)
-    phi = phi.reshape(-1, 1)
+    theta = theta.reshape((-1,))
+    phi = phi.reshape((-1,))
     from pyrecest.backend import column_stack
     from pyrecest.distributions import AbstractSphereSubsetDistribution
     xs = column_stack(AbstractSphereSubsetDistribution.sph_to_cart(phi.flatten(), theta.flatten(), 'inclination'))
     volume = (2 * pi) * pi
-    lambda_x = sin(theta).reshape((-1))
+    lambda_x = sin(theta)
     return xs, volume, lambda_x
 
 
