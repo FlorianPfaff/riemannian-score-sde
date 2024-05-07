@@ -23,7 +23,7 @@ def get_spherical_grid(N, eps=0.0):
     from pyrecest.backend import column_stack
     from pyrecest.distributions import AbstractSphereSubsetDistribution
     xs = column_stack(AbstractSphereSubsetDistribution.sph_to_cart(phi.flatten(), theta.flatten(), 'inclination'))
-    volume = (2 * pi) * pi
+    volume = 2 * pi**2
     lambda_x = sin(theta)
     return xs, volume, lambda_x
 
