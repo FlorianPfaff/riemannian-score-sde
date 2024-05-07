@@ -180,9 +180,7 @@ def earth_plot(cfg, log_prob, train_ds, test_ds, N, azimuth=None, samples=None):
         # norm = mcolors.PowerNorm(3.)  # NOTE: tweak that value
         norm = mcolors.PowerNorm(0.2)  # N=500
         fs = np.array(fs)
-        # print(np.min(fs).item(), jnp.quantile(fs, np.array([0.1, 0.5, 0.9])), np.max(fs).item())
         fs = norm(fs)
-        # print(np.min(fs).item(), jnp.quantile(fs, np.array([0.1, 0.5, 0.9])), np.max(fs).item())
 
         # create figure with earth features
         for i, proj in enumerate(projs):
@@ -201,13 +199,11 @@ def earth_plot(cfg, log_prob, train_ds, test_ds, N, azimuth=None, samples=None):
             ax.add_feature(cfeature.LAND, zorder=0, facecolor="#e0e0e0")
 
             vmin, vmax = 0.0, 1.0
-            # n_levels = 900
             n_levels = 200
             levels = linspace(vmin, vmax, n_levels)
             cmap = sns.cubehelix_palette(
                 light=1.0, dark=0.0, start=0.5, rot=-0.75, reverse=False, as_cmap=True
             )
-            # cmap = sns.cubehelix_palette(as_cmap=True)
             cs = ax.contourf(
                 lon,
                 lat,
@@ -216,8 +212,6 @@ def earth_plot(cfg, log_prob, train_ds, test_ds, N, azimuth=None, samples=None):
                 # alpha=0.8,
                 transform=ccrs.PlateCarree(),
                 antialiased=True,
-                # vmin=vmin,
-                # vmax=vmax,
                 cmap=cmap,
                 extend="both",
             )
@@ -270,7 +264,6 @@ def plot_so3(x0, xt, size, **kwargs):
     fig, axes = plt.subplots(
         2,
         3,
-        # figsize=(1.2 * size, 0.6 * size),
         figsize=(2 * size, 1 * size),
         sharex=False,
         sharey="col",
@@ -483,7 +476,7 @@ def plot_so3b(prob, lambda_x, N, size=10):
             axes[j].set_xticks([grid[0], 0, grid[-1]])
             axes[j].set_xticklabels([r"$-\pi$", "0", r"$\pi$"], color="k")
 
-        y = jmean(prob * lambda_x, axis=jnp.delete(jnp.arange(3), j))
+        y = mean(prob * lambda_x, axis=jnp.delete(jnp.arange(3), j))
 
         axes[j].set(xlim=(grid[0], grid[-1]))
         axes[j].set_xlabel(x_labels[j], fontsize=30)
