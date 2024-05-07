@@ -8,7 +8,7 @@ from riemannian_score_sde.models.distribution import (
     WrapNormDistribution as WrappedNormal,
 )
 from pyrecest.distributions import VonMisesFisherDistribution, HypersphericalMixture
-from geomstats.backend import array, random, ones_like
+from geomstats.backend import array, random, ones_like, prod
 
 class vMFMixture:
     def __init__(
@@ -18,7 +18,7 @@ class vMFMixture:
             raise ValueError("The length of mu_array and kappa_values must be the same.")
 
         self.manifold = manifold
-        self.mu = jnp.array(mu)
+        self.mu = array(mu)
         vmfs = [VonMisesFisherDistribution(array(mu_curr), kappa_curr) for mu_curr, kappa_curr in zip(mu, kappa)]
         self.mixture = HypersphericalMixture(vmfs, weights)
         
@@ -29,7 +29,7 @@ class vMFMixture:
         return self
 
     def __next__(self):
-        samples = self.mixture.sample(np.prod(self.batch_dims))
+        samples = self.mixture.sample(prod(array(self.batch_dims)))
         return (samples, None)
 
 
@@ -43,9 +43,9 @@ class WrapNormMixtureDistribution:
         seed=0,
         rng=None,
     ):
-        self.mean = jnp.array(mean)
+        self.mean = array(mean)
         self.K = self.mean.shape[0]
-        self.scale = jnp.array(scale)
+        self.scale = array(scale)
         self.batch_dims = batch_dims
         self.manifold = manifold
         self.rng = rng if rng is not None else jax.random.PRNGKey(seed)
