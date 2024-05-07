@@ -1,8 +1,7 @@
 """Various sampling methods."""
-from typing import Tuple
 from functools import partial
 import jax
-import jax.numpy as jnp
+from typing import Tuple
 
 from score_sde.utils import batch_mul
 from score_sde.sampling import (
@@ -13,6 +12,7 @@ from score_sde.sampling import (
     register_corrector,
 )
 
+from geomstats.backend import sqrt, expand_dims, ones_like, einsum, abs
 
 @partial(register_predictor, name="GRW")
 class EulerMaruyamaManifoldPredictor(Predictor):
@@ -20,8 +20,8 @@ class EulerMaruyamaManifoldPredictor(Predictor):
         super().__init__(sde)
 
     def update_fn(
-        self, rng, x: jnp.ndarray, t: float, dt: float
-    ) -> Tuple[jnp.ndarray, jnp.ndarray]:
+        self, rng, x: jax.numpy.ndarray, t: float, dt: float
+    ) -> Tuple[jax.numpy.ndarray, jax.numpy.ndarray]:
         shape = x.shape
         z = self.sde.manifold.random_normal_tangent(
             state=rng, base_point=x, n_samples=x.shape[0]
@@ -30,13 +30,13 @@ class EulerMaruyamaManifoldPredictor(Predictor):
         drift = drift * dt[..., None]
         if len(diffusion.shape) > 1 and diffusion.shape[-1] == diffusion.shape[-2]:
             # if square matrix diffusion coeffs
-            tangent_vector = drift + jnp.einsum(
-                "...ij,...j,...->...i", diffusion, z, jnp.sqrt(jnp.abs(dt))
+            tangent_vector = drift + einsum(
+                "...ij,...j,...->...i", diffusion, z, sqrt(abs(dt))
             )
         else:
             # if scalar diffusion coeffs (i.e. no extra dims on the diffusion)
-            tangent_vector = drift + jnp.einsum(
-                "...,...i,...->...i", diffusion, z, jnp.sqrt(jnp.abs(dt))
+            tangent_vector = drift + einsum(
+                "...,...i,...->...i", diffusion, z, sqrt(abs(dt))
             )
 
         tangent_vector = tangent_vector.reshape(shape)
@@ -56,15 +56,15 @@ class LangevinCorrector(Corrector):
         super().__init__(sde, snr, n_steps)
 
     def update_fn(
-        self, rng, x: jnp.ndarray, t: float, dt: float
-    ) -> Tuple[jnp.ndarray, jnp.ndarray]:
+        self, rng, x: jax.numpy.ndarray, t: float, dt: float
+    ) -> Tuple[jax.numpy.ndarray, jax.numpy.ndarray]:
         shape = x.shape
         sde = self.sde
         n_steps = self.n_steps
         target_snr = self.snr
-        """ timestep = (t * (sde.N - 1) / sde.T).astype(jnp.int32)
+        """ timestep = (t * (sde.N - 1) / sde.T).astype(.int32)
         alpha = sde.alphas[timestep] """
-        alpha = jnp.ones_like(t)
+        alpha = ones_like(t)
 
         def loop_body(step, val):
             rng, x = val
@@ -78,10 +78,10 @@ class LangevinCorrector(Corrector):
             grad_norm = self.sde.manifold.metric.norm(grad, x).mean()
             noise_norm = self.sde.manifold.metric.norm(noise, x).mean()
             step_size = (target_snr * noise_norm / grad_norm) ** 2 * 2 * alpha
-            step_size = jnp.expand_dims(step_size, -1)
+            step_size = expand_dims(step_size, -1)
 
             tangent_vector = batch_mul((step_size / 2), grad)
-            tangent_vector += batch_mul(jnp.sqrt(step_size), noise)
+            tangent_vector += batch_mul(sqrt(step_size), noise)
             tangent_vector = tangent_vector.reshape(shape)
 
             x = self.sde.manifold.exp(tangent_vec=tangent_vector, base_point=x)
