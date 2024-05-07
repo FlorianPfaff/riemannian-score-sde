@@ -148,27 +148,24 @@ def earth_plot(cfg, log_prob, train_ds, test_ds, N, azimuth=None, samples=None):
     azimuth_dict = {"earthquake": 70, "fire": 50, "floow": 60, "volcanoe": 170}
     azimuth = azimuth_dict[str(cfg.dataset.name)] if azimuth is None else azimuth
     polar = 30
-    # projs = ["ortho", "robinson"]
     projs = ["ortho"]
 
     xs, lat, lon = get_spherical_grid(N, eps=0.0)
-    # ts = [0.01, 0.05, cfg.flow.tf]
     ts = [cfg.flow.tf]
     figs = []
 
     for t in ts:
         print(t)
-        # fs = log_prob(xs, t)
         fs = log_prob(xs)
         fs = fs.reshape((lat.shape[0], lon.shape[0]), order="F")
         fs = jnp.exp(fs)
-        # norm = mcolors.PowerNorm(3.)  # NOTE: tweak that value
+        # NOTE: tweak that value
         norm = mcolors.PowerNorm(0.2)  # N=500
         fs = np.array(fs)
         fs = norm(fs)
 
         # create figure with earth features
-        for i, proj in enumerate(projs):
+        for _, proj in enumerate(projs):
             print(proj)
             fig = plt.figure(figsize=(5, 5), dpi=300)
             if proj == "ortho":
@@ -479,7 +476,6 @@ def plot_normal(x, dim, size=10):
     fig, axes = plt.subplots(
         1,
         dim,
-        # figsize=(1.2 * size, 0.6 * size),
         figsize=(2 * size, 0.5 * size),
         sharex=False,
         sharey=True,
@@ -550,16 +546,11 @@ def plot_poincare(
         ys = coord_map(ys)
 
         prob = jnp.exp(log_prob(ys))
-        # prob = jnp.exp(jax.vmap(log_prob)(ys[:, None, :]))
         print(f"{prob.min():.4f} | {prob.mean():.4f} | {prob.max():.4f}")
         idx_not_nan = jnp.nonzero(~jnp.isnan(prob))[0]
         nb = len(jnp.nonzero(jnp.isnan(prob))[0])
         tot = prob.shape[0]
         print(f"prop nan in prob: {nb / tot * 100:.1f}%")
-        # prob = prob.at[jnp.isnan(prob) | jnp.isinf(prob)].set(0.0)
-        # prob = jnp.exp(log_prob(xs))
-        # prob = prob.at[jnp.isnan(prob)].set(0.0)
-        # measure = prob * lambda_x
 
         measure = jnp.zeros((N * N)).at[idx].set(prob * lambda_x)
         Z = measure[idx_not_nan].mean() * volume
@@ -591,9 +582,6 @@ def plot_poincare(
         ax.scatter(
             x0[..., 0], x0[..., 1], alpha=1.0, s=2, c="black", label="data", cmap=cmap
         )
-
-    # if xt is not None or x0 is not None:
-    #     ax.legend(loc="best", fontsize=20)
 
     ax.set_xlim([-1.01, 1.01])
     ax.set_ylim([-1.01, 1.01])
