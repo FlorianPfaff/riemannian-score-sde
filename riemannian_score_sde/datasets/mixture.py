@@ -3,13 +3,12 @@ import jax
 import jax.numpy as jnp
 import numpy as np
 from jax.scipy.special import logsumexp
-import geomstats.backend as gs
 
 from riemannian_score_sde.models.distribution import (
     WrapNormDistribution as WrappedNormal,
 )
 from pyrecest.distributions import VonMisesFisherDistribution, HypersphericalMixture
-from pyrecest.backend import array
+from geomstats.backend import array, random, ones_like
 
 class vMFMixture:
     def __init__(
@@ -58,7 +57,7 @@ class WrapNormMixtureDistribution:
         n_samples = np.prod(self.batch_dims)
         ks = jnp.arange(self.K)
         self.rng, next_rng = jax.random.split(self.rng)
-        _, k = gs.random.choice(state=next_rng, a=ks, n=n_samples)
+        _, k = random.choice(state=next_rng, a=ks, n=n_samples)
         mean = self.mean[k]
         scale = self.scale[k]
         tangent_vec = self.manifold.random_normal_tangent(
@@ -74,5 +73,5 @@ class WrapNormMixtureDistribution:
             return WrappedNormal(self.manifold, scale, mean).log_prob(x)
 
         component_log_like = jax.vmap(component_log_prob)(self.mean, self.scale)
-        b = 1 / self.K * jnp.ones_like(component_log_like)
+        b = 1 / self.K * ones_like(component_log_like)
         return logsumexp(component_log_like, axis=0, b=b)
