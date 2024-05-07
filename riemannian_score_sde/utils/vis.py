@@ -535,7 +535,7 @@ def plot_normal(x, dim, size=10):
 def make_disk_grid(N, eps=1e-3, dim=2, radius=1.0):
     h = Hyperbolic(dim=dim, default_coords_type="ball")
     radius = radius - eps
-    x = jlinspace(-radius, radius, N)
+    x = linspace(-radius, radius, N)
     xs = dim * [x]
     xs = jnp.meshgrid(*xs)
     xs = jnp.concatenate([x.reshape(-1, 1) for x in xs], axis=-1)
