@@ -2,8 +2,7 @@
 """
 
 from typing import Tuple
-
-import jax.numpy as jnp
+from geomstats.backend import zeros_like, expand_dims, mean, log
 import jax.random as random
 
 from score_sde.utils import batch_mul, ParametrisedScoreFunction
@@ -40,14 +39,14 @@ def get_dsm_loss_fn(
             y_t = sde.marginal_sample(step_rng, y_0, t)
             if "n_max" in kwargs and kwargs["n_max"] <= -1:
                 get_logp_grad = lambda y_0, y_t, t: sde.varhadan_exp(
-                    y_0, y_t, jnp.zeros_like(t), t
+                    y_0, y_t, zeros_like(t), t
                 )[1]
             else:
                 get_logp_grad = lambda y_0, y_t, t: sde.grad_marginal_log_prob(
                     y_0, y_t, t, **kwargs
                 )[1]
             logp_grad = get_logp_grad(y_0, y_t, t)
-            std = jnp.expand_dims(sde.marginal_prob(jnp.zeros_like(y_t), t)[1], -1)
+            std = expand_dims(sde.marginal_prob(zeros_like(y_t), t)[1], -1)
         else:  # l_{t|s}
             y_t, y_hist, timesteps = sde.marginal_sample(
                 step_rng, y_0, t, return_hist=True
@@ -55,7 +54,7 @@ def get_dsm_loss_fn(
             y_s = y_hist[-2]
             delta_t, logp_grad = sde.varhadan_exp(y_s, y_t, timesteps[-2], timesteps[-1])
             delta_t = t  # NOTE: works better?
-            std = jnp.expand_dims(sde.marginal_prob(jnp.zeros_like(y_t), delta_t)[1], -1)
+            std = expand_dims(sde.marginal_prob(zeros_like(y_t), delta_t)[1], -1)
 
         # compute approximate score at y_t
         score, new_model_state = score_fn(y_t, t, context, rng=step_rng)
@@ -67,10 +66,10 @@ def get_dsm_loss_fn(
             losses = sde.manifold.metric.squared_norm(score - logp_grad, y_t)
         else:
             # compute $E_{p{y_0}}[|| s_\theta(y_t, t) - \nabla \log p(y_t | y_0)||^2]$
-            g2 = sde.coefficients(jnp.zeros_like(y_0), t)[1] ** 2
+            g2 = sde.coefficients(zeros_like(y_0), t)[1] ** 2
             losses = sde.manifold.metric.squared_norm(score - logp_grad, y_t) * g2
 
-        loss = jnp.mean(losses)
+        loss = mean(losses)
         return loss, new_model_state
 
     return loss_fn
@@ -109,7 +108,7 @@ def get_ism_loss_fn(
             g2 = sde.beta_schedule.beta_t(t)
             losses = losses * g2
 
-        loss = jnp.mean(losses)
+        loss = mean(losses)
         return loss, new_model_state
 
     return loss_fn
@@ -136,7 +135,7 @@ def get_moser_loss_fn(
         mu_plus = pushforward.mu_plus(
             y_0, context, model_w_dicts, hutchinson_type, step_rng
         )
-        log_prob = jnp.mean(jnp.log(mu_plus))
+        log_prob = mean(log(mu_plus))
 
         # regularization term
         rng, step_rng = random.split(rng)
@@ -147,7 +146,7 @@ def get_moser_loss_fn(
         mu_minus = pushforward.mu_minus(
             ys, context, model_w_dicts, hutchinson_type, step_rng
         )
-        volume_m = jnp.mean(batch_mul(mu_minus, 1 / prior_prob), axis=0)
+        volume_m = mean(batch_mul(mu_minus, 1 / prior_prob), axis=0)
         penalty = alpha_m * volume_m  # + alpha_p * volume_p
 
         loss = -log_prob + penalty
