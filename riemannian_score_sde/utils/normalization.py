@@ -10,12 +10,12 @@ from geomstats.geometry.special_orthogonal import (
     _SpecialOrthogonal3Vectors,
 )
 from riemannian_score_sde.utils.vis import make_disk_grid
-from pyrecest.backend import pi, linspace, meshgrid, cos, sin, concatenate
+from pyrecest.backend import pi, linspace, meshgrid, cos, sin, concatenate, ones, nonzero
 from pyrecest.distributions import AbstractSphereSubsetDistribution
 
 def get_spherical_grid(N, eps=0.0):
-    theta = linspace(eps, jnp.pi - eps, N // 2)
-    phi = linspace(eps, 2 * jnp.pi - eps, N)
+    theta = linspace(eps, pi - eps, N // 2)
+    phi = linspace(eps, 2 * pi - eps, N)
 
     theta, phi = meshgrid(theta, phi)
     theta = theta.reshape(-1, 1)
@@ -30,9 +30,9 @@ def get_spherical_grid(N, eps=0.0):
 
 
 def get_so3_grid(N, eps=0.0):
-    angle1 = jnp.linspace(-jnp.pi + eps, jnp.pi - eps, N)
-    angle2 = jnp.linspace(-jnp.pi / 2 + eps, jnp.pi / 2 - eps, N // 2)
-    angle3 = jnp.linspace(-jnp.pi + eps, jnp.pi - eps, N)
+    angle1 = jnp.linspace(-pi + eps, pi - eps, N)
+    angle2 = jnp.linspace(-pi / 2 + eps, pi / 2 - eps, N // 2)
+    angle3 = jnp.linspace(-pi + eps, pi - eps, N)
 
     angle1, angle2, angle3 = jnp.meshgrid(angle1, angle2, angle3)
     xs = jnp.concatenate(
@@ -48,7 +48,7 @@ def get_so3_grid(N, eps=0.0):
     # remove points too close from the antipole
     vs = jax.vmap(_SpecialOrthogonal3Vectors().rotation_vector_from_matrix)(xs)
     norm_v = jnp.linalg.norm(vs, axis=-1, keepdims=True)
-    max_norm = jnp.pi - eps
+    max_norm = pi - eps
     cond = jnp.expand_dims(norm_v <= max_norm, -1)
     rescaled_vs = vs * max_norm / norm_v
     rescaled_xs = jax.vmap(_SpecialOrthogonal3Vectors().matrix_from_rotation_vector)(
@@ -70,7 +70,7 @@ def get_euclidean_grid(N, dim):
     xs = jnp.meshgrid(*xs)
     xs = jnp.concatenate([x.reshape(-1, 1) for x in xs], axis=-1)
     volume = (2 * bound) ** dim
-    lambda_x = (jnp.ones((xs.shape[0], 1))).reshape(-1)
+    lambda_x = (ones((xs.shape[0], 1))).reshape(-1)
     return xs, volume, lambda_x
 
 
@@ -81,7 +81,7 @@ def make_disk_grid(N, eps=1e-2, dim=2, radius=1.0):
     xs = jnp.meshgrid(*xs)
     xs = jnp.concatenate([x.reshape(-1, 1) for x in xs], axis=-1)
     mask = jnp.linalg.norm(xs, axis=-1) < 1.0 - eps
-    idx = jnp.nonzero(mask)[0]
+    idx = nonzero(mask)[0]
     xs = xs[idx]
     lambda_x = h.metric.lambda_x(xs) ** 2
     # lambda_x = h.metric.lambda_x(xs) ** 2 * mask
