@@ -1,7 +1,6 @@
 import jax
 from jax import numpy as jnp
-import numpy as np
-from pyrecest.backend import column_stack
+from geomstats.backend import stack, linalg, concatenate, pi, pi, linspace, meshgrid, cos, sin, concatenate, ones
 from pyrecest.distributions import AbstractSphereSubsetDistribution
 
 from geomstats.geometry.euclidean import Euclidean
@@ -12,7 +11,6 @@ from geomstats.geometry.special_orthogonal import (
     _SpecialOrthogonal3Vectors,
 )
 from riemannian_score_sde.utils.vis import make_disk_grid
-from pyrecest.backend import pi, linspace, meshgrid, cos, sin, concatenate, ones, nonzero
 from pyrecest.distributions import AbstractSphereSubsetDistribution
 
 def get_spherical_grid(N, eps=0.0):
@@ -22,7 +20,7 @@ def get_spherical_grid(N, eps=0.0):
     theta, phi = meshgrid(theta, phi)
     theta = theta.reshape((-1,))
     phi = phi.reshape((-1,))
-    xs = column_stack(AbstractSphereSubsetDistribution.sph_to_cart(phi.flatten(), theta.flatten(), 'inclination'))
+    xs = stack(AbstractSphereSubsetDistribution.sph_to_cart(phi.flatten(), theta.flatten(), 'inclination'), axis=-1)
     volume = 2 * pi**2
     lambda_x = sin(theta)
     return xs, volume, lambda_x
@@ -55,8 +53,8 @@ def get_so3_grid(N, eps=0.0):
     )
     xs = jnp.where(cond, xs, rescaled_xs)
 
-    volume = (2 * np.pi) * (2 * np.pi) * np.pi
-    lambda_x = (jnp.sin(angle2 + np.pi / 2)).reshape((-1))
+    volume = (2 * pi) * (2 * pi) * pi
+    lambda_x = (jnp.sin(angle2 + pi / 2)).reshape((-1))
     return xs, volume, lambda_x
 
 
@@ -77,10 +75,10 @@ def make_disk_grid(N, eps=1e-2, dim=2, radius=1.0):
     h = Hyperbolic(dim=dim, default_coords_type="ball")
     x = linspace(-radius, radius, N)
     xs = dim * [x]
-    xs = jnp.meshgrid(*xs)
-    xs = jnp.concatenate([x.reshape(-1, 1) for x in xs], axis=-1)
-    mask = jnp.linalg.norm(xs, axis=-1) < 1.0 - eps
-    idx = nonzero(mask)[0]
+    xs = meshgrid(*xs)
+    xs = concatenate([x.reshape(-1, 1) for x in xs], axis=-1)
+    mask = linalg.norm(xs, axis=-1) < 1.0 - eps
+    idx = jax.numpy.nonzero(mask)[0]
     xs = xs[idx]
     lambda_x = h.metric.lambda_x(xs) ** 2
     # lambda_x = h.metric.lambda_x(xs) ** 2 * mask
