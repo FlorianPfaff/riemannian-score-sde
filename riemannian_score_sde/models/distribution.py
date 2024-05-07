@@ -5,7 +5,7 @@ from score_sde.sde import SDE
 from distrax import MultivariateNormalDiag
 from geomstats.geometry.hypersphere import Hypersphere
 from pyrecest.distributions import HypersphericalUniformDistribution
-from geomstats.backend import zeros_like, zeros, ones, array
+from geomstats.backend import zeros_like, zeros, ones, array, prod
 
 def get_uniform_distribution(manifold):
     if isinstance(manifold, Hypersphere):
@@ -60,9 +60,8 @@ class WrapNormDistribution:
     def sample(self, rng, shape):
         mean = self.mean[None, ...]
         tangent_vec = self.manifold.random_normal_tangent(
-            rng, self.manifold.identity, np.prod(shape)
+            rng, self.manifold.identity, prod(shape)
         )[1]
-        # tangent_vec = self.manifold.random_normal_tangent(rng, mean, np.prod(shape))[1]
         tangent_vec *= self.scale
         tangent_vec = self.manifold.metric.transpfrom0(mean, tangent_vec)
         return self.manifold.metric.exp(tangent_vec, mean)
