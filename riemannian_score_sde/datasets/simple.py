@@ -2,10 +2,9 @@ import math
 import jax
 import jax.numpy as jnp
 from jax.scipy.stats.norm import pdf as normal_pdf
-import numpy as np
 from scipy.special import ive
 
-import geomstats.backend as gs
+from geomstats.backend import random, linalg, transpose
 from geomstats.geometry.lie_group import LieGroup
 from geomstats.geometry.special_orthogonal import _SpecialOrthogonal3Vectors
 from geomstats.algebra_utils import from_vector_to_diagonal_matrix
@@ -142,7 +141,7 @@ class Wrapped:
             raise ValueError(f"Mean value: {mean}")
 
         if scale_type == "random":
-            precision = jax.random.gamma(key=next_rng, a=scale, shape=(K,))
+            precision = random.gamma(key=next_rng, a=scale, shape=(K,))
         elif scale_type == "fixed":
             precision = ones((K,)) * (1 / scale**2)
         else:
@@ -156,7 +155,7 @@ class Wrapped:
     def __next__(self):
         n_samples = prod(self.batch_dims)
         ks = arange(self.mean.shape[0])
-        rng, next_rng = jax.random.split(self.rng)
+        rng, next_rng = random.split(self.rng)
         self.rng = rng
         _, k = random.choice(state=next_rng, a=ks, n=n_samples)
         mean = self.mean[k]
@@ -211,11 +210,11 @@ class Langevin:
         ks = jnp.arange(self.mean.shape[0])
         rng, next_rng = jax.random.split(self.rng)
         self.rng = rng
-        _, k = gs.random.choice(state=next_rng, a=ks, n=n_samples)
+        _, k = random.choice(state=next_rng, a=ks, n=n_samples)
         C = self.mean[k]
         kappa = self.precision[k]
-        C_tr = gs.transpose(C, axes=(0, 2, 1))
-        _, D, _ = jnp.linalg.svd(C)
+        C_tr = transpose(C, axes=(0, 2, 1))
+        _, D, _ = linalg.svd(C)
         D = from_vector_to_diagonal_matrix(D)
 
         cond = zeros(n_samples)
