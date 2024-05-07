@@ -4,7 +4,7 @@
 from typing import Tuple
 
 import jax.numpy as jnp
-import jax.random as random
+from pyrecest.backend import random
 
 from score_sde.utils import batch_mul, ParametrisedScoreFunction
 from score_sde.models import SDEPushForward, MoserFlow, div_noise, get_riemannian_div_fn
