@@ -13,7 +13,7 @@ authors = [
     { name = "Florian Pfaff", email = "pfaff@ias.uni-stuttgart.de" }
 ]
 classifiers = [
-    "License :: OSI Approved :: Apache Software License",
+    "License :: GNU General Public License v3 (GPLv3)",
     "Programming Language :: Python :: 3.10",
     "Operating System :: OS Independent",
     "Topic :: Scientific/Engineering :: Artificial Intelligence"
