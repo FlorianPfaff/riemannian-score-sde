@@ -10,34 +10,22 @@ from geomstats.geometry.special_orthogonal import (
     _SpecialOrthogonal3Vectors,
 )
 from riemannian_score_sde.utils.vis import make_disk_grid
-
-# def compute_microbatch_split(x, K=1):
-#     """ Checks if batch needs to be broken down further to fit in memory. """
-#     B = x.shape[0]
-#     S = int(2e5 / (K * np.prod(x.shape[1:])))  # float heuristic for 12Gb cuda memory
-#     return min(B, S)
-
-
-# def compute_across_microbatch(func, x):
-#     S = compute_microbatch_split(x)
-#     split = jnp.split(x, S)
-#     lw = jnp.concatenate([func(_x) for _x in split], axis=0)  # concat on batch
-#     return lw
-
+from pyrecest.backend import pi, linspace, meshgrid, cos, sin, concatenate
+from pyrecest.distributions import AbstractSphereSubsetDistribution
 
 def get_spherical_grid(N, eps=0.0):
-    theta = jnp.linspace(eps, jnp.pi - eps, N // 2)
-    phi = jnp.linspace(eps, 2 * jnp.pi - eps, N)
+    theta = linspace(eps, jnp.pi - eps, N // 2)
+    phi = linspace(eps, 2 * jnp.pi - eps, N)
 
-    theta, phi = jnp.meshgrid(theta, phi)
+    theta, phi = meshgrid(theta, phi)
     theta = theta.reshape(-1, 1)
     phi = phi.reshape(-1, 1)
-    xs = jnp.concatenate(
-        [jnp.sin(theta) * jnp.cos(phi), jnp.sin(theta) * jnp.sin(phi), jnp.cos(theta)],
+    xs = concatenate(
+        [sin(theta) * cos(phi), sin(theta) * sin(phi), cos(theta)],
         axis=-1,
     )
-    volume = (2 * np.pi) * np.pi
-    lambda_x = jnp.sin(theta).reshape((-1))
+    volume = (2 * pi) * pi
+    lambda_x = sin(theta).reshape((-1))
     return xs, volume, lambda_x
 
 
@@ -76,7 +64,7 @@ def get_so3_grid(N, eps=0.0):
 def get_euclidean_grid(N, dim):
     dim = int(dim)
     bound = 10
-    x = jnp.linspace(-bound, bound, N)
+    x = linspace(-bound, bound, N)
     xs = dim * [x]
 
     xs = jnp.meshgrid(*xs)
@@ -88,7 +76,7 @@ def get_euclidean_grid(N, dim):
 
 def make_disk_grid(N, eps=1e-2, dim=2, radius=1.0):
     h = Hyperbolic(dim=dim, default_coords_type="ball")
-    x = jnp.linspace(-radius, radius, N)
+    x = linspace(-radius, radius, N)
     xs = dim * [x]
     xs = jnp.meshgrid(*xs)
     xs = jnp.concatenate([x.reshape(-1, 1) for x in xs], axis=-1)
