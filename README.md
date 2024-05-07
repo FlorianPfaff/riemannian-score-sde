@@ -12,20 +12,10 @@ An updated version of `geomstats`, maintained by Florian Pfaff, includes these e
 
 Simple install instructions are:
 ```
-git clone https://github.com/oxcsml/riemannian-score-sde.git
-cd score-sde
-git clone https://github.com/oxcsml/geomstats.git 
-virtualenv -p python3.9 venv
-source venv/bin/activate
-pip install -r requirements.txt
-pip install -r requirements_exps.txt
-GEOMSTATS_BACKEND=jax pip install -e geomstats
-pip install -e .
+git clone https://github.com/FlorianPfaff/riemannian-score-sde.git
+pip install beartype mpmath numpy-quaternion -e .
 ```
-
-- `requirements.txt` contains the core requirements for running the code in the `score_sde` and `riemmanian_score_sde` packages. NOTE: you may need to alter the jax versions here to match your setup.
-- `requirements_exps.txt` contains extra dependencies needed for running our experiments, and using the `run.py` file provided for training / testing models. Also contains extra dependencies for using the job scheduling functionality of hydra.
-- `requirements_dev.txt` contains some handy development packages.
+All other dependencies should install automatically.
 
 ## Code structure
 
