@@ -14,7 +14,7 @@ from riemannian_score_sde.models.distribution import (
     WrapNormDistribution as WrappedNormal,
 )
 from pyrecest.distributions import VonMisesFisherDistribution
-from pyrecest.backend import array
+from pyrecest.backend import array, zeros, ones, log, prod, pi, arange, sqrt, expand_dims, exp, trace, random
 
 class Uniform:
     def __init__(self, batch_dims, manifold, seed, **kwargs):
@@ -28,7 +28,7 @@ class Uniform:
     def __next__(self):
         rng, next_rng = jax.random.split(self.rng)
         self.rng = rng
-        n_samples = np.prod(self.batch_dims)
+        n_samples = prod(self.batch_dims)
         samples = self.manifold.random_uniform(state=next_rng, n_samples=n_samples)
         return (samples, None)
 
@@ -37,9 +37,9 @@ class vMFDataset:
     def __init__(self, batch_dims, rng, manifold, mu, kappa, **kwargs):
         self.manifold = manifold
         self.d = self.manifold.dim + 1
-        self.mu = jnp.array(mu)
+        self.mu = array(mu)
         assert manifold.belongs(self.mu)
-        self.kappa = jnp.array([kappa])
+        self.kappa = array([kappa])
         self.batch_dims = batch_dims
         self.rng = rng
         self.vmf = VonMisesFisherDistribution(array(mu), kappa)
@@ -48,7 +48,7 @@ class vMFDataset:
         return self
 
     def __next__(self):
-        samples = self.vmf.sample(np.prod(self.batch_dims))
+        samples = self.vmf.sample(prod(self.batch_dims))
         
         batch_dims = (self.batch_dims,) if isinstance(self.batch_dims, int) else self.batch_dims
         samples = samples.reshape([*batch_dims, samples.shape[-1]])
@@ -57,9 +57,9 @@ class vMFDataset:
 
     def _log_normalization(self):
         output = -(
-            (self.d / 2 - 1) * jnp.log(self.kappa)
-            - (self.d / 2) * math.log(2 * math.pi)
-            - (self.kappa + jnp.log(ive(self.d / 2 - 1, self.kappa)))
+            (self.d / 2 - 1) * log(self.kappa)
+            - (self.d / 2) * log(2 * math.pi)
+            - (self.kappa + log(ive(self.d / 2 - 1, self.kappa)))
         )
         return output.reshape([1, *output.shape[:-1]])
 
@@ -67,7 +67,7 @@ class vMFDataset:
         return self._log_unnormalized_prob(x) - self._log_normalization()
 
     def _log_unnormalized_prob(self, x):
-        output = self.kappa * (jnp.expand_dims(self.mu, 0) * x).sum(-1, keepdims=True)
+        output = self.kappa * (expand_dims(self.mu, 0) * x).sum(-1, keepdims=True)
         return output.reshape([*output.shape[:-1]])
 
     def entropy(self):
@@ -81,14 +81,14 @@ class vMFDataset:
 
 class DiracDataset:
     def __init__(self, batch_dims, mu, **kwargs):
-        self.mu = jnp.array(mu)
+        self.mu = array(mu)
         self.batch_dims = batch_dims
 
     def __iter__(self):
         return self
 
     def __next__(self):
-        n_samples = np.prod(self.batch_dims)
+        n_samples = prod(self.batch_dims)
         samples = jnp.repeat(self.mu.reshape(1, -1), n_samples, 0)
         return (samples, None)
 
@@ -98,8 +98,8 @@ class WrapNormDistribution:
         self.manifold = manifold
         self.batch_dims = batch_dims
         if mean is None:
-            mean = jnp.zeros(manifold.dim)
-        mean = jnp.array(mean)
+            mean = zeros(manifold.dim)
+        mean = array(mean)
         self.dist = WrappedNormal(manifold, scale, mean)
         self.rng = rng if rng is not None else jax.random.PRNGKey(seed)
 
@@ -134,7 +134,7 @@ class Wrapped:
         if mean == "unif":
             self.mean = self.manifold.random_uniform(state=next_rng, n_samples=K)
         elif mean == "anti":
-            v = jnp.array([[jnp.pi, 0.0, 0.0]])
+            v = array([[pi, 0.0, 0.0]])
             self.mean = _SpecialOrthogonal3Vectors().matrix_from_tait_bryan_angles(v)
         elif mean == "id" and isinstance(self.manifold, LieGroup):
             self.mean = self.manifold.identity
@@ -144,30 +144,30 @@ class Wrapped:
         if scale_type == "random":
             precision = jax.random.gamma(key=next_rng, a=scale, shape=(K,))
         elif scale_type == "fixed":
-            precision = jnp.ones((K,)) * (1 / scale**2)
+            precision = ones((K,)) * (1 / scale**2)
         else:
             raise ValueError(f"Scale value: {scale}")
         axis_to_expand = tuple(range(-1, -len(self.mean.shape), -1))
-        self.precision = jnp.expand_dims(precision, axis_to_expand)
+        self.precision = expand_dims(precision, axis_to_expand)
 
     def __iter__(self):
         return self
 
     def __next__(self):
-        n_samples = np.prod(self.batch_dims)
-        ks = jnp.arange(self.mean.shape[0])
+        n_samples = prod(self.batch_dims)
+        ks = arange(self.mean.shape[0])
         rng, next_rng = jax.random.split(self.rng)
         self.rng = rng
-        _, k = gs.random.choice(state=next_rng, a=ks, n=n_samples)
+        _, k = random.choice(state=next_rng, a=ks, n=n_samples)
         mean = self.mean[k]
-        scale = 1 / jnp.sqrt(self.precision[k])
+        scale = 1 / sqrt(self.precision[k])
         tangent_vec = self.manifold.random_normal_tangent(
             state=next_rng, base_point=mean, n_samples=n_samples
         )[1]
         tangent_vec = scale * tangent_vec
         samples = self.manifold.exp(tangent_vec, mean)
         if self.conditional:
-            return samples, jnp.expand_dims(k, -1)
+            return samples, expand_dims(k, -1)
         else:
             return (samples, None)
 
@@ -175,7 +175,7 @@ class Wrapped:
         # TODO: this is wrong, cf WrapNormDistribution in distribution.py
         def single_log_prob(samples, mean, precision):
             pos = self.manifold.log(samples, mean)
-            ll = normal_pdf(pos, scale=1 / jnp.sqrt(precision))
+            ll = normal_pdf(pos, scale=1 / sqrt(precision))
             return ll.prod(axis=-1)
 
         ll = jax.vmap(single_log_prob, (None, 0, 0), (0))(
@@ -207,7 +207,7 @@ class Langevin:
         return self
 
     def __next__(self):
-        n_samples = np.prod(self.batch_dims)
+        n_samples = prod(self.batch_dims)
         ks = jnp.arange(self.mean.shape[0])
         rng, next_rng = jax.random.split(self.rng)
         self.rng = rng
@@ -218,21 +218,21 @@ class Langevin:
         _, D, _ = jnp.linalg.svd(C)
         D = from_vector_to_diagonal_matrix(D)
 
-        cond = jnp.zeros(n_samples)
-        samples = jnp.zeros((n_samples, self.manifold.n, self.manifold.n))
+        cond = zeros(n_samples)
+        samples = zeros((n_samples, self.manifold.n, self.manifold.n))
         i = 0
         while not cond.all():
             X = self.manifold.random_uniform(state=next_rng, n_samples=n_samples)
-            thresh = gs.exp(kappa * gs.trace(C_tr @ X - D, axis1=1, axis2=2))
+            thresh = exp(kappa * trace(C_tr @ X - D, axis1=1, axis2=2))
             rng, next_rng = jax.random.split(rng)
-            _, u = gs.random.rand(state=next_rng, size=n_samples)
+            _, u = random.rand(state=next_rng, size=n_samples)
             mask = u < thresh
-            mask = gs.expand_dims(mask, axis=(-1, -2))
+            mask = expand_dims(mask, axis=(-1, -2))
             samples = (1 - mask) * samples + mask * X
             cond = (1 - mask) * cond + mask * mask
             i += 1
 
         if self.conditional:
-            return samples, jnp.expand_dims(k, -1)
+            return samples, expand_dims(k, -1)
         else:
             return (samples, None)
