@@ -1,6 +1,8 @@
 import jax
 from jax import numpy as jnp
 import numpy as np
+from pyrecest.backend import column_stack
+from pyrecest.distributions import AbstractSphereSubsetDistribution
 
 from geomstats.geometry.euclidean import Euclidean
 from geomstats.geometry.hypersphere import Hypersphere
@@ -20,8 +22,6 @@ def get_spherical_grid(N, eps=0.0):
     theta, phi = meshgrid(theta, phi)
     theta = theta.reshape((-1,))
     phi = phi.reshape((-1,))
-    from pyrecest.backend import column_stack
-    from pyrecest.distributions import AbstractSphereSubsetDistribution
     xs = column_stack(AbstractSphereSubsetDistribution.sph_to_cart(phi.flatten(), theta.flatten(), 'inclination'))
     volume = 2 * pi**2
     lambda_x = sin(theta)
