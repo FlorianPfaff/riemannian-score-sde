@@ -7,6 +7,7 @@ from geomstats.geometry.hypersphere import Hypersphere
 from geomstats.geometry.euclidean import Euclidean
 from geomstats import algebra_utils as utils
 
+from geomstats.backend import sqrt, sum
 from score_sde.models import Transform, ComposeTransform
 
 
@@ -103,7 +104,7 @@ class RadialTanhTransform(Transform):
         # return jnp.where(
         #     mask, jnp.tanh(x_norm) * x / x_norm * self.radius, x * self.radius
         # )
-        x_sq_norm = jnp.sum(jnp.square(x), axis=-1, keepdims=True)
+        x_sq_norm = jnp.sum(x**2, axis=-1, keepdims=True)
         tanh_ratio = utils.taylor_exp_even_func(x_sq_norm, utils.tanh_close_0, order=5)
         return tanh_ratio * x * self.radius
 
@@ -119,7 +120,7 @@ class RadialTanhTransform(Transform):
         #     mask, jnp.arctanh(y_norm / self.radius) * y / y_norm, y / self.radius
         # )
 
-        y_sq_norm = jnp.sum(jnp.square(y), axis=-1, keepdims=True)
+        y_sq_norm = jnp.sum(y**2, axis=-1, keepdims=True)
         y_sq_norm = y_sq_norm / (self.radius**2)
         # y_sq_norm = jnp.clip(y_sq_norm, a_max=1)
         y_sq_norm = jnp.clip(y_sq_norm, a_max=1 - 1e-7)
@@ -136,8 +137,8 @@ class RadialTanhTransform(Transform):
         :param y: Tensor
         :return: Tensor
         """
-        x_sq_norm = jnp.sum(jnp.square(x), axis=-1)
-        x_norm = jnp.sqrt(x_sq_norm)
+        x_sq_norm = sum(x**2, axis=-1)
+        x_norm = sqrt(x_sq_norm)
         dim = x.shape[-1]
         # tanh = jnp.tanh(x_norm)
         # term1 = -jnp.log(x_norm / tanh)
