@@ -1,11 +1,11 @@
 import abc
 
 import haiku as hk
-import jax.numpy as jnp
 
 from hydra.utils import instantiate
 from geomstats.geometry.hypersphere import Hypersphere
 from geomstats.geometry.base import LevelSet as EmbeddedManifold
+from geomstats.backend import einsum, array, zeros
 
 
 # def get_exact_div_fn(fi_fn, Xi=None):
@@ -55,7 +55,7 @@ class VectorFieldGenerator(hk.Module, abc.ABC):
     def __call__(self, x, t):
         fi_fn, Xi_fn = self.decomposition
         fi, Xi = fi_fn(x, t), Xi_fn(x)
-        out = jnp.einsum("...n,...dn->...d", fi, Xi)
+        out = einsum("...n,...dn->...d", fi, Xi)
         # NOTE: seems that extra projection is required for generator=eigen
         # during the ODE solve cf tests/test_lkelihood.py
         out = self.manifold.to_tangent(out, x)
@@ -78,7 +78,7 @@ class DivFreeGenerator(VectorFieldGenerator):
 
     def div_generators(self, x):
         shape = [*x.shape[:-1], self.output_shape(self.manifold)]
-        return jnp.zeros(shape)
+        return zeros(shape)
 
 
 class EigenGenerator(VectorFieldGenerator):
@@ -138,7 +138,7 @@ class LieAlgebraGenerator(VectorFieldGenerator):
         fi_fn, Xi_fn = self.decomposition
         x_input = x.reshape((*x.shape[:-2], -1))
         fi, Xi = fi_fn(x_input, t), Xi_fn(x)
-        out = jnp.einsum("...i,ijk ->...jk", fi, Xi)
+        out = einsum("...i,ijk ->...jk", fi, Xi)
         out = self.manifold.compose(x, out)
         # out = self.manifold.to_tangent(out, x)
         return out.reshape((x.shape[0], -1))
@@ -148,7 +148,7 @@ class TorusGenerator(VectorFieldGenerator):
     def __init__(self, architecture, embedding, output_shape, manifold):
         super().__init__(architecture, embedding, output_shape, manifold)
 
-        self.rot_mat = jnp.array([[0, -1], [1, 0]])
+        self.rot_mat = array([[0, -1], [1, 0]])
 
     @staticmethod
     def output_shape(manifold):
