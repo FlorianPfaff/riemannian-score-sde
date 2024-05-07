@@ -8,25 +8,6 @@ from geomstats.geometry.base import LevelSet as EmbeddedManifold
 from geomstats.backend import einsum, array, zeros
 
 
-# def get_exact_div_fn(fi_fn, Xi=None):
-#     "flatten all but the last axis and compute the true divergence"
-
-#     def div_fn(x: jnp.ndarray, t: float):
-#         x_shape = x.shape
-#         dim = np.prod(x_shape[1:])
-#         t = jnp.expand_dims(t.reshape(-1), axis=-1)
-#         x = jnp.expand_dims(x, 1)  # NOTE: need leading batch dim after vmap
-#         t = jnp.expand_dims(t, 1)
-#         jac = jax.vmap(jax.jacrev(fi_fn, argnums=0))(x, t)
-#         jac = jac.reshape([x_shape[0], dim, dim])
-#         if Xi is not None:
-#             jac = jnp.einsum("...nd,...dm->...nm", jac, Xi)
-#         div = jnp.trace(jac, axis1=-1, axis2=-2)
-#         return div
-
-#     return div_fn
-
-
 class VectorFieldGenerator(hk.Module, abc.ABC):
     def __init__(self, architecture, embedding, output_shape, manifold):
         """X = fi * Xi with fi weights and Xi generators"""
