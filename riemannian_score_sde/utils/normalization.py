@@ -105,12 +105,6 @@ def compute_normalization(
     elif isinstance(manifold, _SpecialOrthogonalMatrices) and manifold.dim == 3:
         N = N if N is not None else 50
         xs, volume, lambda_x = get_so3_grid(N, eps=1e-3)
-    # elif isinstance(manifold, PoincareBall):
-    #     N = N if N is not None else 100
-    #     xs, volume, lambda_x = make_disk_grid(N, dim=manifold.dim)
-    # elif isinstance(manifold, Hyperboloid):
-    #     N = N if N is not None else 100
-    #     xs, volume, lambda_x = make_hyp_grid(N, dim=manifold.dim)
     else:
         print("Only integration over R^d, S^2, H2 and SO(3) is implemented.")
         return 0.0
