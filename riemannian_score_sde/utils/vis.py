@@ -63,20 +63,6 @@ def set_aspect_equal_3d(ax):
     return ax
 
 
-def get_sphere_coords():
-    theta_inc = linspace(0, np.pi, n)
-    phi_az_right = linspace(0, 2 * np.pi, n) 
-    x, y, z = AbstractSphereSubsetDistribution.sph_to_cart_inclination(theta_inc, phi_az_right, 'inclination')
-
-    return x, y, z
-
-
-def sphere_plot(ax, color="grey"):
-    x, y, z = get_sphere_coords()
-    ax.plot_surface(x, y, z, rstride=4, cstride=4, color=color, linewidth=0, alpha=0.2)
-
-    return ax
-
 def remove_background(ax):
     ax.set_axis_off()
     ax.xaxis.pane.fill = False
@@ -97,7 +83,6 @@ def latlon_from_cartesian(points):
 
     lat = -jnp.arcsin(z / r)
     lon = jnp.arctan2(y, x)
-    # lon = jnp.where(lon > 0, lon - pi, lon + pi)
     return jnp.concatenate([jnp.expand_dims(lat, -1), jnp.expand_dims(lon, -1)], axis=-1)
 
 
