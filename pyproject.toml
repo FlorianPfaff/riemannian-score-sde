@@ -22,7 +22,7 @@ dependencies = [
     "jax==0.4.30",
     "jaxlib==0.4.30",
     "dm-haiku",
-    "optax==0.2.2",
+    "optax==0.2.3",
     "distrax",
     "diffrax",
     "fsspec[http]>=2021.05.0, !=2021.06.0",
