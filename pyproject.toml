@@ -38,7 +38,7 @@ dependencies = [
     "hydra-joblib-launcher==1.2.0",
     "pyrecest @ git+https://github.com/FlorianPfaff/pyRecEst.git",
     "geomstats @ git+https://github.com/FlorianPfaff/geomstats_for_score_sde.git",
-    "numpy<2.0.0"
+    "numpy<3.0.0"
 ]
 
 [tool.setuptools]
