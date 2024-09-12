@@ -19,7 +19,7 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Artificial Intelligence"
 ]
 dependencies = [
-    "jax==0.4.31",
+    "jax==0.4.32",
     "jaxlib==0.4.31",
     "dm-haiku",
     "optax==0.2.3",
