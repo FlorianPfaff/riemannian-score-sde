@@ -20,7 +20,7 @@ classifiers = [
 ]
 dependencies = [
     "jax==0.4.33",
-    "jaxlib==0.4.33",
+    "jaxlib==0.4.34",
     "dm-haiku",
     "optax==0.2.3",
     "distrax",
