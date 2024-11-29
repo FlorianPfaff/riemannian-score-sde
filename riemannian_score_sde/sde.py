@@ -4,7 +4,7 @@ import jax.numpy as jnp
 from score_sde.sde import SDE, RSDE as RSDEBase, get_matrix_div_fn
 from score_sde.models import get_score_fn
 from score_sde.utils import batch_mul
-from riemannian_score_sde.sampling import get_pc_sampler
+from score_sde.sampling import get_pc_sampler
 from riemannian_score_sde.models.distribution import (
     MultivariateNormal,
     WrapNormDistribution,
